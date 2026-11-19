@@ -1,1 +1,937 @@
- // ========================================== // LAVERNE CENTER - BACKEND V2 // نظام الحجوزات المستقلة لكل قسم // ==========================================  var ADMIN_PIN = "1234"; var ARCHIVE_VERSION = "LAVERNE_BOOKINGS_RESET_V2";  function getDB() {   var props = PropertiesService.getScriptProperties();   var ssId = props.getProperty("SS_ID");   var ss;    if (ssId) {     try {       ss = SpreadsheetApp.openById(ssId);     } catch (e) {}   }    if (!ss) {     ss = SpreadsheetApp.create("حجوزات وإعدادات مركز لافيرن");     props.setProperty("SS_ID", ss.getId());   }    var bookings = ss.getSheetByName("Bookings");    if (!bookings) {     bookings = ss.insertSheet("Bookings");     bookings.appendRow([       "ID", "التاريخ", "الوقت", "الاسم",       "الهاتف", "الخدمات", "الإجمالي",       "الحالة", "الأقسام"     ]);     bookings.setFrozenRows(1);   }    var config = ss.getSheetByName("Config");    if (!config) {     config = ss.insertSheet("Config");     config.appendRow(["Key", "Value"]);   }    // أرشفة الحجوزات القديمة مرة واحدة فقط   archiveOldBookings(ss);    return ss; }  // ========================================== // أرشفة الحجوزات القديمة // ==========================================  function archiveOldBookings(ss) {   var props = PropertiesService.getScriptProperties();    if (props.getProperty(ARCHIVE_VERSION) === "DONE") {     return;   }    var lock = LockService.getScriptLock();   lock.waitLock(20000);    try {     if (props.getProperty(ARCHIVE_VERSION) === "DONE") {       return;     }      var sh = ss.getSheetByName("Bookings");     if (!sh) return;      var last = sh.getLastRow();      if (last > 1) {       var archive = ss.getSheetByName("Old Bookings");        if (!archive) {         archive = ss.insertSheet("Old Bookings");       }        var oldData = sh.getRange(1, 1, last, sh.getLastColumn()).getValues();        if (archive.getLastRow() === 0) {         archive.getRange(1, 1, oldData.length, oldData[0].length)           .setValues(oldData);       } else {         var dataOnly = oldData.slice(1);          if (dataOnly.length) {           archive.getRange(             archive.getLastRow() + 1,             1,             dataOnly.length,             dataOnly[0].length           ).setValues(dataOnly);         }       }        // تفريغ الحجوزات الحالية مع الاحتفاظ بالعناوين       if (last > 1) {         sh.deleteRows(2, last - 1);       }     }      sh.getRange(1, 1, 1, 9).setValues([[       "ID", "التاريخ", "الوقت", "الاسم",       "الهاتف", "الخدمات", "الإجمالي",       "الحالة", "الأقسام"     ]]);      sh.setFrozenRows(1);      props.setProperty(ARCHIVE_VERSION, "DONE");    } finally {     lock.releaseLock();   } }  // ========================================== // استقبال طلبات الموقع // ==========================================  function doGet(e) {   try {     var ss = getDB();     var cfg = getConfig(ss);     var booked = getBookedMap(ss);      return jsonOut({       ok: true,       cfg: cfg,       booked: booked     });    } catch (err) {     return jsonOut({       ok: false,       message: err.toString()     });   } }  function doPost(e) {   try {     var data = JSON.parse(e.postData.contents || "{}");     var action = data.a;     var ss = getDB();      // ======================================     // جلب الحجوزات     // ======================================      if (action === "list") {       if (!checkPin(data.pin)) {         return jsonOut({           ok: false,           message: "الرقم السري غير صحيح"         });       }        return jsonOut({         ok: true,         rows: getRows(ss)       });     }      // ======================================     // حجز موعد جديد     // ======================================      if (action === "book") {       var lock = LockService.getScriptLock();       lock.waitLock(20000);        try {         var date = String(data.date || "").trim();         var time = String(data.time || "").trim();         var name = String(data.name || "").trim();         var phone = String(data.phone || "").trim();          if (!date || !time || !name || !phone) {           return jsonOut({             ok: false,             message: "يرجى استكمال بيانات الحجز"           });         }          var categoryKeys = data.categoryKeys || [];          if (!Array.isArray(categoryKeys) || !categoryKeys.length) {           categoryKeys = ["*"];         }          categoryKeys = categoryKeys.map(function(k) {           return String(k);         });          var booked = getBookedMap(ss);         var day = booked[date] || {};          // فحص جميع الأقسام المختارة         for (var i = 0; i < categoryKeys.length; i++) {           var key = categoryKeys[i];            if (             (day["*"] && day["*"].indexOf(time) !== -1) ||             (day[key] && day[key].indexOf(time) !== -1)           ) {             return jsonOut({               ok: false,               err: "taken",               message: "الموعد غير متاح في أحد الأقسام المختارة"             });           }         }          var sh = ss.getSheetByName("Bookings");          sh.appendRow([           Utilities.getUuid(),           date,           time,           name,           "'" + phone,           String(data.services || ""),           String(data.totalText || data.total || ""),           "active",           JSON.stringify(categoryKeys)         ]);          return jsonOut({           ok: true,           message: "تم تسجيل الحجز"         });        } finally {         lock.releaseLock();       }     }      // ======================================     // التحقق من صلاحية الإدارة     // ======================================      if (!checkPin(data.pin)) {       return jsonOut({         ok: false,         message: "الرقم السري غير صحيح"       });     }      // ======================================     // حفظ الإعدادات والخدمات والعروض     // ======================================      if (action === "save") {       if (!data.cfg || typeof data.cfg !== "object") {         return jsonOut({           ok: false,           message: "بيانات الإعدادات غير صحيحة"         });       }        saveConfig(ss, data.cfg);        return jsonOut({         ok: true,         message: "تم حفظ الإعدادات"       });     }      // ======================================     // حظر موعد لقسم محدد     // ======================================      if (action === "block") {       var date = String(data.date || "");       var time = String(data.time || "");       var categoryKey = String(data.categoryKey || "*");        if (!date || !time) {         return jsonOut({           ok: false,           message: "حددي التاريخ والوقت"         });       }        var lock = LockService.getScriptLock();       lock.waitLock(20000);        try {         var sh = ss.getSheetByName("Bookings");         var booked = getBookedMap(ss);         var day = booked[date] || {};          if (           day[categoryKey] &&           day[categoryKey].indexOf(time) !== -1         ) {           return jsonOut({             ok: false,             message: "هذا الموعد محجوز أو محظور بالفعل"           });         }          sh.appendRow([           Utilities.getUuid(),           date,           time,           "مغلق من الإدارة",           "",           "وقت محظور",           "",           "blocked",           JSON.stringify([categoryKey])         ]);          return jsonOut({ ok: true });        } finally {         lock.releaseLock();       }     }      // ======================================     // فك حظر موعد لقسم محدد     // ======================================      if (action === "unblock") {       var date = String(data.date || "");       var time = String(data.time || "");       var categoryKey = String(data.categoryKey || "*");        var sh = ss.getSheetByName("Bookings");       var vals = sh.getDataRange().getValues();        for (var i = vals.length - 1; i >= 1; i--) {         var rowDate = formatDate(vals[i][1]);         var rowTime = formatTime(vals[i][2]);         var status = String(vals[i][7] || "");          var keys = parseCategoryKeys(vals[i][8]);          if (           rowDate === date &&           rowTime === time &&           status === "blocked" &&           keys.indexOf(categoryKey) !== -1         ) {           sh.deleteRow(i + 1);           return jsonOut({ ok: true });         }       }        return jsonOut({         ok: false,         message: "لم يتم العثور على الحظر"       });     }      // ======================================     // حذف حجز     // ======================================      if (action === "deleteBooking") {       var id = String(data.id || "");       var sh = ss.getSheetByName("Bookings");       var vals = sh.getDataRange().getValues();        for (var i = 1; i < vals.length; i++) {         if (String(vals[i][0]) === id) {           sh.deleteRow(i + 1);           return jsonOut({ ok: true });         }       }        return jsonOut({         ok: false,         message: "الحجز غير موجود"       });     }      // ======================================     // رفع الصور إلى Google Drive     // ======================================      if (action === "upload") {       if (!data.data) {         return jsonOut({           ok: false,           message: "لم يتم اختيار صورة"         });       }        var bytes = Utilities.base64Decode(data.data);        var blob = Utilities.newBlob(         bytes,         data.mimeType || "image/jpeg",         "laverne_" + Date.now() + ".jpg"       );        var folderName = "صور مركز لافيرن";       var folders = DriveApp.getFoldersByName(folderName);        var folder = folders.hasNext()         ? folders.next()         : DriveApp.createFolder(folderName);        var file = folder.createFile(blob);        file.setSharing(         DriveApp.Access.ANYONE_WITH_LINK,         DriveApp.Permission.VIEW       );        var url = "https://drive.google.com/uc?export=view&id=" + file.getId();        return jsonOut({         ok: true,         url: url       });     }      return jsonOut({       ok: false,       message: "الأمر غير معروف"     });    } catch (err) {     return jsonOut({       ok: false,       message: err.toString()     });   } }  // ========================================== // التحقق من الرقم السري // ==========================================  function checkPin(pin) {   return String(pin || "") === String(ADMIN_PIN); }  // ========================================== // قراءة الإعدادات // ==========================================  function getConfig(ss) {   var sh = ss.getSheetByName("Config");    if (!sh || sh.getLastRow() < 2) {     return null;   }    var vals = sh.getDataRange().getValues();    for (var i = 1; i < vals.length; i++) {     if (String(vals[i][0]) === "cfg") {       try {         return JSON.parse(vals[i][1]);       } catch (e) {         return null;       }     }   }    return null; }  // ========================================== // حفظ الإعدادات دون تغيير بيانات الحجوزات // ==========================================  function saveConfig(ss, cfg) {   var sh = ss.getSheetByName("Config");    if (!sh) {     sh = ss.insertSheet("Config");   }    sh.clear();   sh.appendRow(["Key", "Value"]);   sh.appendRow(["cfg", JSON.stringify(cfg)]); }  // ========================================== // خريطة المواعيد المستقلة لكل قسم // ==========================================  function getBookedMap(ss) {   var sh = ss.getSheetByName("Bookings");   var vals = sh.getDataRange().getValues();   var map = {};    for (var i = 1; i < vals.length; i++) {     var date = formatDate(vals[i][1]);     var time = formatTime(vals[i][2]);     var status = String(vals[i][7] || "active");      if (!date || !time) continue;      var keys = parseCategoryKeys(vals[i][8]);      if (!keys.length) {       keys = ["*"];     }      if (!map[date]) {       map[date] = {};     }      keys.forEach(function(key) {       if (!map[date][key]) {         map[date][key] = [];       }        if (map[date][key].indexOf(time) === -1) {         map[date][key].push(time);       }     });   }    return map; }  // ========================================== // قراءة مفاتيح الأقسام // ==========================================  function parseCategoryKeys(value) {   if (Array.isArray(value)) return value;    try {     var parsed = JSON.parse(String(value || "[]"));      if (Array.isArray(parsed)) {       return parsed.map(String);     }   } catch (e) {}    return []; }  // ========================================== // قائمة الحجوزات للإدارة // ==========================================  function getRows(ss) {   var sh = ss.getSheetByName("Bookings");   var vals = sh.getDataRange().getValues();   var rows = [];    for (var i = 1; i < vals.length; i++) {     var date = formatDate(vals[i][1]);     var time = formatTime(vals[i][2]);      if (!date || !time) continue;      rows.push({       id: String(vals[i][0] || ""),       d: date,       t: time,       n: String(vals[i][3] || ""),       p: String(vals[i][4] || "").replace(/^'/, ""),       svc: String(vals[i][5] || ""),       totalText: String(vals[i][6] || ""),       status: String(vals[i][7] || "active"),       categoryKeys: parseCategoryKeys(vals[i][8])     });   }    return rows; }  // ========================================== // تنسيق التاريخ // ==========================================  function formatDate(v) {   if (v instanceof Date) {     return Utilities.formatDate(       v,       Session.getScriptTimeZone(),       "yyyy-MM-dd"     );   }    return String(v || "").trim(); }  // ========================================== // تنسيق الوقت // ==========================================  function formatTime(v) {   if (v instanceof Date) {     return Utilities.formatDate(       v,       Session.getScriptTimeZone(),       "HH:mm"     );   }    return String(v || "").trim(); }  // ========================================== // إخراج JSON // ==========================================  function jsonOut(obj) {   return ContentService     .createTextOutput(JSON.stringify(obj))     .setMimeType(ContentService.MimeType.JSON); }
+
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#21151f">
+<title>مركز لاڤيرن | LAVERNE CENTER</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&family=Amiri:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{
+ --bg:#21151f;--panel:#30212d;--panel2:#3b2936;
+ --pink:#df9dbb;--gold:#d5b477;--text:#fff7fb;
+ --muted:#c7b4c0;--line:#624657;--danger:#e68b8b;
+}
+*{box-sizing:border-box}
+body{
+ margin:0;background:radial-gradient(circle at top,#493044,var(--bg) 55%);
+ color:var(--text);font-family:Cairo,sans-serif;min-height:100vh
+}
+button,input,select,textarea{font:inherit}
+button{cursor:pointer}
+header{
+ text-align:center;padding:28px 16px 22px;
+ border-bottom:1px solid var(--line);
+ background:linear-gradient(135deg,#382436,#21151f)
+}
+.logo{
+ width:76px;height:76px;border:1px solid var(--gold);
+ border-radius:50%;margin:auto;display:grid;place-items:center;
+ color:var(--gold);font-family:Amiri;font-size:36px;
+ box-shadow:0 0 25px #d5b47730;cursor:pointer
+}
+.brand{font-family:Amiri;font-size:32px;color:var(--gold);margin:8px 0 0}
+.tag{font-size:10px;letter-spacing:3px;color:var(--pink)}
+.owner{font-size:12px;color:var(--muted);margin-top:5px}
+main{width:min(100% - 28px,850px);margin:22px auto 60px}
+.hero{
+ padding:25px 20px;border:1px solid #76566b;border-radius:22px;
+ background:linear-gradient(135deg,#4a3042,#30212d);
+ text-align:center;margin-bottom:22px
+}
+.hero h2{font-family:Amiri;color:var(--gold);font-size:27px;margin:0 0 8px}
+.hero p{color:var(--muted);font-size:13px;line-height:2;margin:0}
+.section-title{font-family:Amiri;font-size:24px;color:var(--gold);margin:24px 0 12px}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.category{
+ border:1px solid var(--line);border-radius:18px;overflow:hidden;
+ background:var(--panel);min-height:145px;position:relative;
+ text-align:center;cursor:pointer
+}
+.category img{width:100%;height:112px;object-fit:cover;display:block}
+.category .cat-placeholder{
+ height:112px;display:grid;place-items:center;
+ background:linear-gradient(135deg,#66445c,#332333);
+ color:var(--gold);font-size:36px
+}
+.category strong{display:block;padding:10px;color:var(--text)}
+.panel{
+ background:linear-gradient(145deg,#382737,#2b1e29);
+ border:1px solid var(--line);border-radius:20px;padding:17px;margin:15px 0
+}
+.service{
+ display:flex;gap:12px;align-items:center;padding:13px 0;
+ border-bottom:1px solid #ffffff15
+}
+.service:last-child{border:0}
+.service img{width:74px;height:74px;object-fit:cover;border-radius:12px}
+.service-info{flex:1;min-width:0}
+.service-info strong{display:block;font-size:14px}
+.service-info p{font-size:11px;color:var(--muted);margin:4px 0;line-height:1.8}
+.price{font-size:12px;color:var(--gold)}
+.btn{
+ border:0;border-radius:12px;padding:10px 16px;
+ background:linear-gradient(135deg,#e5b4ca,#c981a5);
+ color:#281925;font-weight:800
+}
+.btn.secondary{background:#493347;color:var(--text);border:1px solid var(--line)}
+.btn.gold{background:linear-gradient(135deg,#e7d09c,#bd9954)}
+.btn.danger{background:#67363e;color:#fff}
+.btn.small{padding:7px 11px;font-size:12px}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+.field{margin:12px 0}
+.field label{display:block;font-size:12px;color:var(--muted);margin-bottom:6px}
+.field input,.field select,.field textarea{
+ width:100%;padding:12px;border:1px solid var(--line);
+ border-radius:12px;background:#241923;color:white;outline:none
+}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--gold)}
+.field textarea{min-height:75px;resize:vertical}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.slots{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.slot{
+ padding:10px 4px;border:1px solid var(--line);border-radius:10px;
+ background:#291e29;color:var(--text);font-size:12px
+}
+.slot.selected{background:var(--gold);color:#21151f;border-color:var(--gold)}
+.slot:disabled{opacity:.25;text-decoration:line-through}
+.notice{font-size:12px;color:var(--muted);line-height:1.9}
+.total{
+ display:flex;justify-content:space-between;padding:13px 0;
+ border-top:1px solid var(--line);color:var(--gold);font-weight:800
+}
+.hidden{display:none!important}
+.back{margin-bottom:12px}
+.offer{
+ border:1px solid var(--gold);border-radius:16px;padding:14px;
+ background:linear-gradient(120deg,#503447,#30212d);margin:10px 0
+}
+.offer img{width:100%;max-height:180px;object-fit:cover;border-radius:12px}
+.offer h3{color:var(--gold);margin:8px 0}
+footer{text-align:center;color:var(--muted);font-size:11px;padding:25px}
+.admin-tabs{display:flex;gap:7px;overflow:auto;padding-bottom:8px}
+.admin-tabs button{white-space:nowrap}
+.admin-card{padding:13px;border:1px solid var(--line);border-radius:13px;margin:9px 0;background:#281d28}
+.admin-card strong{color:var(--gold)}
+.status{font-size:11px;color:var(--muted)}
+#toast{
+ position:fixed;bottom:20px;left:50%;transform:translateX(-50%);
+ background:#f2d9e6;color:#291b26;padding:12px 18px;
+ border-radius:12px;z-index:20;display:none;max-width:90%;
+ font-size:13px;text-align:center
+}
+@media(max-width:430px){
+ main{width:calc(100% - 22px)}
+ .grid{gap:9px}
+ .row{grid-template-columns:1fr}
+ .slots{grid-template-columns:repeat(3,1fr)}
+}
+</style>
+</head>
+<body>
+
+<header>
+ <div class="logo" id="secretLogo">L</div>
+ <div class="brand" id="brandTitle">LAVERNE CENTER</div>
+ <div class="tag">BEAUTY · CARE · ELEGANCE</div>
+ <div class="owner" id="ownerTitle">مركز لاڤيرن</div>
+</header>
+
+<main>
+ <section id="homePage">
+  <div class="hero">
+   <h2 id="heroTitle">جمالك يبدأ من هنا</h2>
+   <p id="heroText">اختاري خدماتك، وحدّدي الوقت المناسب، وأكدي حجزك بكل سهولة.</p>
+  </div>
+
+  <div id="offersArea"></div>
+  <h2 class="section-title">أقسام المركز</h2>
+  <div class="grid" id="categoriesGrid"></div>
+
+  <div class="panel">
+   <h2 class="section-title">معلومات التواصل</h2>
+   <div id="contactInfo" class="notice">مركز لاڤيرن</div>
+  </div>
+ </section>
+
+ <section id="categoryPage" class="hidden">
+  <button class="btn secondary back" onclick="goHome()">← رجوع للأقسام</button>
+  <h2 class="section-title" id="categoryTitle"></h2>
+  <div class="panel">
+   <div id="servicesList"></div>
+  </div>
+ </section>
+
+ <section id="bookingPage" class="hidden">
+  <button class="btn secondary back" onclick="goCategory()">← رجوع للخدمات</button>
+  <h2 class="section-title">تأكيد الحجز</h2>
+  <div class="panel">
+   <div id="selectedServices"></div>
+   <div class="total"><span>الإجمالي الثابت</span><span id="fixedTotal">0 د.ل</span></div>
+   <div id="priceNotes" class="notice"></div>
+
+   <div class="field">
+    <label>الاسم</label>
+    <input id="customerName" placeholder="اكتبي اسمك">
+   </div>
+   <div class="field">
+    <label>رقم الهاتف</label>
+    <input id="customerPhone" type="tel" placeholder="رقم الهاتف">
+   </div>
+   <div class="field">
+    <label>تاريخ الحجز</label>
+    <input id="bookingDate" type="date">
+   </div>
+   <div class="field">
+    <label>اختاري الوقت المتاح</label>
+    <div id="slotsArea" class="slots"></div>
+    <div class="notice" id="slotNotice">اختاري التاريخ لعرض المواعيد المتاحة.</div>
+   </div>
+   <button class="btn gold" style="width:100%" id="confirmButton" onclick="confirmBooking()">تأكيد الحجز عبر واتساب</button>
+  </div>
+ </section>
+
+ <section id="adminPage" class="hidden">
+  <h2 class="section-title">لوحة الإدارة</h2>
+  <div class="panel">
+   <div class="admin-tabs">
+    <button class="btn small" onclick="adminTab('bookings')">الحجوزات</button>
+    <button class="btn small secondary" onclick="adminTab('categories')">الأقسام</button>
+    <button class="btn small secondary" onclick="adminTab('offers')">العروض</button>
+    <button class="btn small secondary" onclick="adminTab('settings')">الإعدادات</button>
+    <button class="btn small secondary" onclick="adminTab('blocks')">إغلاق المواعيد</button>
+   </div>
+   <div id="adminContent"></div>
+   <button class="btn secondary" onclick="exitAdmin()">خروج من الإدارة</button>
+  </div>
+ </section>
+</main>
+
+<footer>© LAVERNE CENTER · مركز لاڤيرن</footer>
+<div id="toast"></div>
+
+<script>
+"use strict";
+
+// رابط السكربت المنشور
+const API = "https://script.google.com/macros/s/AKfycbwYiaR8Lf-vcHoeN9oJxzX_sP92Javlg4MEF_cO_6cwtu7g_LtJR4lMQJhLfCzhX1KP/exec";
+const DEFAULT_WA = "218912744233";
+
+let CFG = {};
+let BOOKED = {};
+let ROWS = [];
+let BLOCKS = [];
+let CURRENT_CATEGORY = null;
+let SELECTED = [];
+let SELECTED_TIME = "";
+let ADMIN_PIN = "";
+let ADMIN_SECTION = "bookings";
+let logoTaps = 0;
+let logoTimer = null;
+
+const $ = id => document.getElementById(id);
+
+function toast(message){
+ const el=$("toast");
+ el.textContent=message;
+ el.style.display="block";
+ clearTimeout(toast.timer);
+ toast.timer=setTimeout(()=>el.style.display="none",3000);
+}
+
+async function apiGet(){
+ const response=await fetch(API,{method:"GET",cache:"no-store"});
+ if(!response.ok) throw new Error("تعذر الاتصال بالخادم");
+ return await response.json();
+}
+
+async function apiPost(data){
+ const response=await fetch(API,{
+  method:"POST",
+  headers:{"Content-Type":"text/plain;charset=utf-8"},
+  body:JSON.stringify(data)
+ });
+ if(!response.ok) throw new Error("تعذر إرسال الطلب");
+ const result=await response.json();
+ if(!result.ok) throw new Error(result.error||result.err||"حدث خطأ");
+ return result;
+}
+
+function slug(text){
+ return String(text||"section")
+  .trim().toLowerCase()
+  .replace(/[^\u0600-\u06FFa-z0-9]+/g,"-")
+  .replace(/^-|-$/g,"") || "section";
+}
+
+function normalizeConfig(){
+ if(!CFG||typeof CFG!=="object") CFG={};
+ if(!Array.isArray(CFG.sections)) CFG.sections=[];
+
+ CFG.sections.forEach((section,index)=>{
+  if(!section.id) section.id="sec-"+slug(section.t)+"-"+index;
+  if(!Number(section.capacity)||Number(section.capacity)<1) section.capacity=1;
+  if(!Array.isArray(section.items)) section.items=[];
+  section.items.forEach((item,i)=>{
+   if(!item.id) item.id="item-"+slug(item.n)+"-"+index+"-"+i;
+   if(!item.priceType) item.priceType="fixed";
+   if(item.p===undefined) item.p=0;
+  });
+ });
+ if(!Array.isArray(CFG.offers)) CFG.offers=[];
+ if(!CFG.wa) CFG.wa=DEFAULT_WA;
+ if(CFG.open===undefined) CFG.open=10;
+ if(CFG.close===undefined) CFG.close=21;
+}
+
+async function loadSite(){
+ try{
+  const data=await apiGet();
+  if(!data.ok) throw new Error(data.err||"تعذر تحميل الموقع");
+  CFG=data.cfg||{};
+  BOOKED=data.booked||{};
+  normalizeConfig();
+  renderSite();
+ }catch(error){
+  console.error(error);
+  toast("تعذر تحميل البيانات. تأكدي من نشر السكربت وصلاحياته.");
+ }
+}
+
+function renderSite(){
+ $("brandTitle").textContent=CFG.brand||"LAVERNE CENTER";
+ $("ownerTitle").textContent=CFG.name||"مركز لاڤيرن";
+ $("heroTitle").textContent=CFG.tag||"جمالك يبدأ من هنا";
+ $("heroText").textContent=CFG.hero||"اختاري خدماتك وحددي الوقت المناسب.";
+ renderCategories();
+ renderOffers();
+ renderContact();
+}
+
+function renderCategories(){
+ const grid=$("categoriesGrid");
+ grid.innerHTML="";
+ CFG.sections.forEach((section,index)=>{
+  const card=document.createElement("div");
+  card.className="category";
+  const image=section.image||section.i||"";
+  card.innerHTML=`
+   ${image?`<img src="${escapeAttr(image)}" alt="">`:
+    `<div class="cat-placeholder">${["✿","❀","♡","✧","❋"][index%5]}</div>`}
+   <strong>${escapeHtml(section.t||"قسم")}</strong>`;
+  card.onclick=()=>openCategory(section.id);
+  grid.appendChild(card);
+ });
+}
+
+function renderOffers(){
+ const area=$("offersArea");
+ area.innerHTML="";
+ const active=(CFG.offers||[]).filter(o=>{
+  if(o.active===false) return false;
+  const today=new Date().toISOString().slice(0,10);
+  return (!o.start||o.start<=today)&&(!o.end||o.end>=today);
+ });
+ if(!active.length) return;
+ const heading=document.createElement("h2");
+ heading.className="section-title";
+ heading.textContent="عروض لاڤيرن";
+ area.appendChild(heading);
+ active.forEach(o=>{
+  const card=document.createElement("div");
+  card.className="offer";
+  card.innerHTML=`
+   ${o.image?`<img src="${escapeAttr(o.image)}" alt="">`:""}
+   <h3>${escapeHtml(o.title||"عرض خاص")}</h3>
+   <div class="notice">${escapeHtml(o.desc||"")}</div>
+   <strong style="color:var(--gold)">${o.newPrice!==undefined?escapeHtml(o.newPrice)+" د.ل":""}</strong>
+   ${o.oldPrice?`<del class="notice"> ${escapeHtml(o.oldPrice)} د.ل</del>`:""}`;
+  area.appendChild(card);
+ });
+}
+
+function renderContact(){
+ $("contactInfo").innerHTML=`
+  <div>${escapeHtml(CFG.addr||"")}</div>
+  <div>${escapeHtml(CFG.hours||"")}</div>
+  <div>${escapeHtml(CFG.phone||"")}</div>`;
+}
+
+function openCategory(id){
+ CURRENT_CATEGORY=CFG.sections.find(s=>String(s.id)===String(id));
+ if(!CURRENT_CATEGORY) return;
+ showPage("categoryPage");
+ $("categoryTitle").textContent=CURRENT_CATEGORY.t;
+ renderServices();
+}
+
+function renderServices(){
+ const list=$("servicesList");
+ list.innerHTML="";
+ (CURRENT_CATEGORY.items||[]).forEach((item,index)=>{
+  const price=priceInfo(item);
+  const card=document.createElement("div");
+  card.className="service";
+  card.innerHTML=`
+   ${item.image||item.i?`<img src="${escapeAttr(item.image||item.i)}" alt="">`:""}
+   <div class="service-info">
+    <strong>${escapeHtml(item.n||"خدمة")}</strong>
+    <p>${escapeHtml(item.desc||"")}</p>
+    <div class="price">${escapeHtml(price.label)}</div>
+   </div>
+   <button class="btn small" type="button">اختيار</button>`;
+  card.querySelector("button").onclick=()=>toggleService(item,CURRENT_CATEGORY);
+  list.appendChild(card);
+ });
+}
+
+function priceInfo(item){
+ const type=item.priceType||"fixed";
+ if(type==="consult") return {label:"السعر يحدد بعد المعاينة",type};
+ if(type==="range"){
+  return {
+   label:`من ${Number(item.minPrice||0)} إلى ${Number(item.maxPrice||0)} د.ل`,
+   type
+  };
+ }
+ return {label:`${Number(item.p||0)} د.ل`,type:"fixed"};
+}
+
+function toggleService(item,section){
+ const found=SELECTED.find(x=>x.item.id===item.id&&x.section.id===section.id);
+ if(found){
+  SELECTED=SELECTED.filter(x=>x!==found);
+ }else{
+  SELECTED.push({item:item,section:section});
+ }
+ updateBookingButton();
+ toast(found?"تم إزالة الخدمة":"تمت إضافة الخدمة");
+}
+
+function updateBookingButton(){
+ let button=document.getElementById("bookingFloating");
+ if(!button){
+  button=document.createElement("button");
+  button.id="bookingFloating";
+  button.className="btn gold";
+  button.style="position:fixed;bottom:18px;left:15px;z-index:10;box-shadow:0 5px 20px #0007";
+  button.onclick=openBooking;
+  document.body.appendChild(button);
+ }
+ button.textContent=`متابعة الحجز (${SELECTED.length})`;
+ button.classList.toggle("hidden",SELECTED.length===0);
+}
+
+function openBooking(){
+ if(!SELECTED.length){toast("اختاري خدمة أولاً");return}
+ showPage("bookingPage");
+ renderBookingSummary();
+ $("bookingDate").min=new Date().toISOString().slice(0,10);
+ $("bookingDate").onchange=()=>{
+  SELECTED_TIME="";
+  renderSlots();
+ };
+ renderSlots();
+}
+
+function renderBookingSummary(){
+ let fixed=0,notes=[];
+ const box=$("selectedServices");
+ box.innerHTML="";
+ SELECTED.forEach(x=>{
+  const p=priceInfo(x.item);
+  const div=document.createElement("div");
+  div.className="notice";
+  div.style.padding="5px 0";
+  div.textContent=x.section.t+" — "+x.item.n+" · "+p.label;
+  box.appendChild(div);
+  if(p.type==="fixed") fixed+=Number(x.item.p||0);
+  if(p.type==="range") notes.push(x.item.n+": السعر التقديري "+p.label);
+  if(p.type==="consult") notes.push(x.item.n+": السعر بعد المعاينة");
+ });
+ $("fixedTotal").textContent=fixed+" د.ل";
+ $("priceNotes").textContent=notes.join(" | ");
+}
+
+function getSelectedSections(){
+ const seen={};
+ return SELECTED.map(x=>x.section).filter(s=>{
+  if(seen[s.id]) return false;
+  seen[s.id]=true;
+  return true;
+ });
+}
+
+function timeSlots(){
+ const start=Number(CFG.open??10);
+ const end=Number(CFG.close??21);
+ const result=[];
+ for(let h=start;h<end;h++){
+  result.push(String(h).padStart(2,"0")+":00");
+ }
+ return result;
+}
+
+function slotAvailable(date,time){
+ const sections=getSelectedSections();
+ if(!sections.length) return false;
+ const day=BOOKED[date]||{};
+ if((day["*"]||[]).includes(time)) return false;
+
+ return sections.every(section=>{
+  if((day[section.id]||[]).includes(time)) return false;
+  const capacity=Math.max(1,Number(section.capacity)||1);
+  const count=(day[section.id]||[]).filter(t=>t===time).length;
+  return count<capacity;
+ });
+}
+
+function renderSlots(){
+ const date=$("bookingDate").value;
+ const area=$("slotsArea");
+ area.innerHTML="";
+ if(!date){
+  $("slotNotice").textContent="اختاري التاريخ لعرض المواعيد.";
+  return;
+ }
+ const now=new Date();
+ const today=new Date().toISOString().slice(0,10);
+ timeSlots().forEach(time=>{
+  const button=document.createElement("button");
+  button.className="slot";
+  button.textContent=time;
+  const available=slotAvailable(date,time);
+  button.disabled=!available;
+  if(time===SELECTED_TIME&&available) button.classList.add("selected");
+  button.onclick=()=>{
+   SELECTED_TIME=time;
+   renderSlots();
+  };
+  area.appendChild(button);
+ });
+ $("slotNotice").textContent="المواعيد المعروضة تعتمد على سعة الأقسام المختارة.";
+}
+
+async function confirmBooking(){
+ const name=$("customerName").value.trim();
+ const phone=$("customerPhone").value.trim();
+ const date=$("bookingDate").value;
+ const time=SELECTED_TIME;
+ const button=$("confirmButton");
+
+ if(!name||!phone||!date||!time){
+  toast("أكملي الاسم والهاتف والتاريخ والوقت");
+  return;
+ }
+ if(!SELECTED.length){
+  toast("اختاري خدمة واحدة على الأقل");
+  return;
+ }
+
+ button.disabled=true;
+ button.textContent="جارٍ تسجيل الحجز...";
+ const sections=getSelectedSections();
+ const categoryKeys=sections.map(s=>String(s.id));
+ let fixed=0;
+ const details=SELECTED.map(x=>{
+  const p=priceInfo(x.item);
+  if(p.type==="fixed") fixed+=Number(x.item.p||0);
+  return x.section.t+" - "+x.item.n+" ("+p.label+")";
+ });
+
+ try{
+  // يتم تسجيل الحجز في قاعدة البيانات أولاً
+  await apiPost({
+   a:"book",
+   name:name,
+   phone:phone,
+   date:date,
+   time:time,
+   services:details.join("، "),
+   total:fixed,
+   categoryKeys:categoryKeys
+  });
+
+  const message=
+   "حجز جديد - مركز لاڤيرن\n"+
+   "الاسم: "+name+"\n"+
+   "الهاتف: "+phone+"\n"+
+   "الخدمات: "+details.join("، ")+"\n"+
+   "الإجمالي الثابت: "+fixed+" د.ل\n"+
+   "التاريخ: "+date+"\n"+
+   "الوقت: "+time;
+
+  const wa=String(CFG.wa||DEFAULT_WA).replace(/\D/g,"");
+  window.location.href="https://wa.me/"+wa+"?text="+encodeURIComponent(message);
+
+ }catch(error){
+  toast(error.message||"تعذر تسجيل الحجز");
+  await refreshBooked();
+ }finally{
+  button.disabled=false;
+  button.textContent="تأكيد الحجز عبر واتساب";
+ }
+}
+
+async function refreshBooked(){
+ try{
+  const data=await apiGet();
+  if(data.ok) BOOKED=data.booked||{};
+  renderSlots();
+ }catch(e){}
+}
+
+// -----------------------------------------
+// التنقل
+// -----------------------------------------
+
+function showPage(id){
+ ["homePage","categoryPage","bookingPage","adminPage"].forEach(x=>$(x).classList.add("hidden"));
+ $(id).classList.remove("hidden");
+ window.scrollTo({top:0,behavior:"smooth"});
+}
+
+function goHome(){showPage("homePage")}
+function goCategory(){showPage("categoryPage")}
+
+// -----------------------------------------
+// الإدارة المخفية: خمس ضغطات على الشعار
+// -----------------------------------------
+
+$("secretLogo").addEventListener("click",()=>{
+ logoTaps++;
+ clearTimeout(logoTimer);
+ logoTimer=setTimeout(()=>logoTaps=0,1800);
+ if(logoTaps>=5){
+  logoTaps=0;
+  const pin=prompt("أدخلي الرقم السري للإدارة");
+  if(pin!==null) loginAdmin(pin);
+ }
+});
+
+async function loginAdmin(pin){
+ try{
+  const result=await apiPost({a:"list",pin:pin});
+  ADMIN_PIN=pin;
+  ROWS=result.bookings||result.rows||[];
+  BLOCKS=result.blocks||[];
+  CFG=result.cfg||CFG;
+  normalizeConfig();
+  showPage("adminPage");
+  adminTab("bookings");
+ }catch(error){
+  toast(error.message||"تعذر الدخول");
+ }
+}
+
+async function reloadAdmin(){
+ const result=await apiPost({a:"list",pin:ADMIN_PIN});
+ ROWS=result.bookings||result.rows||[];
+ BLOCKS=result.blocks||[];
+ CFG=result.cfg||CFG;
+ normalizeConfig();
+}
+
+function adminTab(tab){
+ ADMIN_SECTION=tab;
+ const area=$("adminContent");
+ area.innerHTML="";
+ if(tab==="bookings") renderAdminBookings(area);
+ if(tab==="categories") renderAdminCategories(area);
+ if(tab==="offers") renderAdminOffers(area);
+ if(tab==="settings") renderAdminSettings(area);
+ if(tab==="blocks") renderAdminBlocks(area);
+}
+
+function renderAdminBookings(area){
+ const heading=document.createElement("h3");
+ heading.textContent="الحجوزات";
+ area.appendChild(heading);
+ const active=ROWS.filter(r=>!["cancelled","blocked","unblocked"].includes(String(r.status||"").toLowerCase()));
+ if(!active.length) area.innerHTML+='<p class="notice">لا توجد حجوزات حالياً.</p>';
+
+ active.forEach(b=>{
+  const card=document.createElement("div");
+  card.className="admin-card";
+  card.innerHTML=`
+   <strong>${escapeHtml(b.n||"")}</strong>
+   <div class="notice">${escapeHtml(b.p||"")}</div>
+   <div class="notice">${escapeHtml(b.d||"")} · ${escapeHtml(b.t||"")}</div>
+   <div class="notice">${escapeHtml(b.services||b.s||"")}</div>
+   <div class="notice">${escapeHtml(b.total||"")} د.ل</div>
+   <button class="btn danger small">إلغاء الحجز</button>`;
+  card.querySelector("button").onclick=async()=>{
+   if(!confirm("هل تريدين إلغاء هذا الحجز؟")) return;
+   try{
+    await apiPost({a:"deleteBooking",pin:ADMIN_PIN,id:b.id});
+    await reloadAdmin();
+    adminTab("bookings");
+    toast("تم إلغاء الحجز مع الاحتفاظ بسجله");
+   }catch(e){toast(e.message)}
+  };
+  area.appendChild(card);
+ });
+}
+
+function renderAdminCategories(area){
+ area.innerHTML+=`
+  <h3>إدارة الأقسام والخدمات</h3>
+  <div class="field"><label>اسم القسم</label><input id="newCatName" placeholder="مثلاً: الشعر"></div>
+  <div class="field"><label>عدد الموظفات المتاحات بالتزامن</label><input id="newCatCapacity" type="number" min="1" value="1"></div>
+  <button class="btn gold" onclick="addCategory()">إضافة قسم</button>`;
+ CFG.sections.forEach((s,index)=>{
+  const card=document.createElement("div");
+  card.className="admin-card";
+  card.innerHTML=`
+   <strong>${escapeHtml(s.t)}</strong>
+   <div class="field"><label>السعة المتزامنة</label>
+    <input type="number" min="1" value="${Number(s.capacity)||1}" id="capacity-${index}">
+   </div>
+   <div class="field"><label>صورة القسم (رابط)</label>
+    <input id="catimage-${index}" value="${escapeAttr(s.image||s.i||"")}" placeholder="رابط الصورة">
+   </div>
+   <button class="btn small" onclick="saveCategory(${index})">حفظ القسم</button>
+   <button class="btn small secondary" onclick="addService(${index})">إضافة خدمة</button>
+   <div id="items-${index}"></div>`;
+  area.appendChild(card);
+  const items=card.querySelector("#items-"+index);
+  (s.items||[]).forEach((item,j)=>{
+   const div=document.createElement("div");
+   div.className="admin-card";
+   div.innerHTML=`
+    <strong>${escapeHtml(item.n)}</strong>
+    <div class="notice">${escapeHtml(priceInfo(item).label)}</div>
+    <button class="btn small secondary">تعديل</button>
+    <button class="btn small danger">حذف</button>`;
+   const buttons=div.querySelectorAll("button");
+   buttons[0].onclick=()=>editService(index,j);
+   buttons[1].onclick=()=>deleteService(index,j);
+   items.appendChild(div);
+  });
+ });
+}
+
+async function addCategory(){
+ const name=$("newCatName").value.trim();
+ const capacity=Math.max(1,Number($("newCatCapacity").value)||1);
+ if(!name){toast("اكتبي اسم القسم");return}
+ CFG.sections.push({
+  id:"sec-"+slug(name)+"-"+Date.now(),
+  t:name,capacity:capacity,items:[]
+ });
+ await saveConfig();
+ adminTab("categories");
+}
+
+async function saveCategory(index){
+ const section=CFG.sections[index];
+ section.capacity=Math.max(1,Number($("capacity-"+index).value)||1);
+ section.image=$("catimage-"+index).value.trim();
+ await saveConfig();
+}
+
+async function addService(index){
+ const name=prompt("اسم الخدمة");
+ if(!name) return;
+ const price=prompt("السعر الثابت (اكتبي 0 إذا كان السعر يحدد بعد المعاينة)");
+ if(price===null) return;
+ CFG.sections[index].items.push({
+  id:"item-"+Date.now(),
+  n:name,
+  p:Number(price)||0,
+  priceType:"fixed"
+ });
+ await saveConfig();
+ adminTab("categories");
+}
+
+async function editService(index,j){
+ const item=CFG.sections[index].items[j];
+ const name=prompt("اسم الخدمة",item.n||"");
+ if(name===null) return;
+ const price=prompt("السعر الثابت",item.p||0);
+ if(price===null) return;
+ item.n=name;
+ item.p=Number(price)||0;
+ item.priceType="fixed";
+ await saveConfig();
+ adminTab("categories");
+}
+
+async function deleteService(index,j){
+ if(!confirm("هل تريدين حذف الخدمة؟")) return;
+ CFG.sections[index].items.splice(j,1);
+ await saveConfig();
+ adminTab("categories");
+}
+
+function renderAdminOffers(area){
+ area.innerHTML+=`
+  <h3>إدارة العروض</h3>
+  <div class="field"><label>عنوان العرض</label><input id="offerTitle"></div>
+  <div class="field"><label>الوصف</label><textarea id="offerDesc"></textarea></div>
+  <div class="row">
+   <div class="field"><label>السعر السابق</label><input id="offerOld" type="number"></div>
+   <div class="field"><label>السعر الجديد</label><input id="offerNew" type="number"></div>
+  </div>
+  <div class="row">
+   <div class="field"><label>بداية العرض</label><input id="offerStart" type="date"></div>
+   <div class="field"><label>نهاية العرض</label><input id="offerEnd" type="date"></div>
+  </div>
+  <div class="field"><label>رابط صورة العرض</label><input id="offerImage"></div>
+  <button class="btn gold" onclick="addOffer()">إضافة العرض</button>`;
+ (CFG.offers||[]).forEach((o,i)=>{
+  const div=document.createElement("div");
+  div.className="admin-card";
+  div.innerHTML=`
+   <strong>${escapeHtml(o.title||"عرض")}</strong>
+   <div class="notice">${escapeHtml(o.newPrice||"")} د.ل</div>
+   <button class="btn small danger">حذف العرض</button>`;
+  div.querySelector("button").onclick=async()=>{
+   CFG.offers.splice(i,1);
+   await saveConfig();
+   adminTab("offers");
+  };
+  area.appendChild(div);
+ });
+}
+
+async function addOffer(){
+ const title=$("offerTitle").value.trim();
+ if(!title){toast("اكتبي عنوان العرض");return}
+ CFG.offers=CFG.offers||[];
+ CFG.offers.push({
+  id:"offer-"+Date.now(),
+  title:title,
+  desc:$("offerDesc").value,
+  oldPrice:$("offerOld").value,
+  newPrice:$("offerNew").value,
+  start:$("offerStart").value,
+  end:$("offerEnd").value,
+  image:$("offerImage").value,
+  active:true
+ });
+ await saveConfig();
+ adminTab("offers");
+}
+
+function renderAdminSettings(area){
+ area.innerHTML=`
+  <h3>إعدادات المركز</h3>
+  <div class="field"><label>اسم العلامة</label><input id="setBrand" value="${escapeAttr(CFG.brand||"")}"></div>
+  <div class="field"><label>اسم المركز</label><input id="setName" value="${escapeAttr(CFG.name||"")}"></div>
+  <div class="field"><label>العبارة الرئيسية</label><input id="setTag" value="${escapeAttr(CFG.tag||"")}"></div>
+  <div class="field"><label>النص الترحيبي</label><textarea id="setHero">${escapeHtml(CFG.hero||"")}</textarea></div>
+  <div class="field"><label>رقم واتساب مع مفتاح الدولة</label><input id="setWa" value="${escapeAttr(CFG.wa||DEFAULT_WA)}"></div>
+  <div class="field"><label>رقم الهاتف</label><input id="setPhone" value="${escapeAttr(CFG.phone||"")}"></div>
+  <div class="field"><label>العنوان</label><input id="setAddr" value="${escapeAttr(CFG.addr||"")}"></div>
+  <div class="field"><label>ساعات العمل</label><input id="setHours" value="${escapeAttr(CFG.hours||"")}"></div>
+  <div class="row">
+   <div class="field"><label>بداية الدوام (ساعة)</label><input id="setOpen" type="number" min="0" max="23" value="${Number(CFG.open??10)}"></div>
+   <div class="field"><label>نهاية الدوام (ساعة)</label><input id="setClose" type="number" min="1" max="24" value="${Number(CFG.close??21)}"></div>
+  </div>
+  <button class="btn gold" onclick="saveSettings()">حفظ الإعدادات</button>`;
+}
+
+async function saveSettings(){
+ CFG.brand=$("setBrand").value;
+ CFG.name=$("setName").value;
+ CFG.tag=$("setTag").value;
+ CFG.hero=$("setHero").value;
+ CFG.wa=$("setWa").value;
+ CFG.phone=$("setPhone").value;
+ CFG.addr=$("setAddr").value;
+ CFG.hours=$("setHours").value;
+ CFG.open=Number($("setOpen").value);
+ CFG.close=Number($("setClose").value);
+ await saveConfig();
+}
+
+function renderAdminBlocks(area){
+ area.innerHTML=`
+  <h3>إغلاق موعد</h3>
+  <div class="field"><label>التاريخ</label><input id="blockDate" type="date"></div>
+  <div class="field"><label>الوقت (اختاري * لإغلاق اليوم بالكامل)</label>
+   <select id="blockTime">
+    <option value="*">اليوم بالكامل</option>
+    ${timeSlots().map(t=>`<option value="${t}">${t}</option>`).join("")}
+   </select>
+  </div>
+  <div class="field"><label>القسم</label>
+   <select id="blockCategory">
+    <option value="*">كل الأقسام</option>
+    ${CFG.sections.map(s=>`<option value="${escapeAttr(s.id)}">${escapeHtml(s.t)}</option>`).join("")}
+   </select>
+  </div>
+  <button class="btn gold" onclick="createBlock()">إغلاق الموعد</button>
+  <h3>المواعيد المغلقة</h3>`;
+ BLOCKS.forEach(b=>{
+  const div=document.createElement("div");
+  div.className="admin-card";
+  div.innerHTML=`
+   <strong>${escapeHtml(b.date)} · ${escapeHtml(b.time)}</strong>
+   <div class="notice">${escapeHtml(b.categoryKey||"*")}</div>
+   <button class="btn small secondary">إعادة فتح</button>`;
+  div.querySelector("button").onclick=async()=>{
+   try{
+    await apiPost({a:"unblock",pin:ADMIN_PIN,id:b.id});
+    await reloadAdmin();
+    adminTab("blocks");
+    toast("تم فتح الموعد");
+   }catch(e){toast(e.message)}
+  };
+  area.appendChild(div);
+ });
+}
+
+async function createBlock(){
+ const date=$("blockDate").value;
+ const time=$("blockTime").value;
+ const categoryKey=$("blockCategory").value;
+ if(!date){toast("اختاري التاريخ");return}
+ try{
+  await apiPost({a:"block",pin:ADMIN_PIN,date:date,time:time,categoryKey:categoryKey});
+  await reloadAdmin();
+  adminTab("blocks");
+  toast("تم إغلاق الموعد");
+ }catch(e){toast(e.message)}
+}
+
+async function saveConfig(){
+ try{
+  normalizeConfig();
+  await apiPost({a:"save",pin:ADMIN_PIN,cfg:CFG});
+  renderSite();
+  toast("تم حفظ التغييرات");
+ }catch(error){
+  toast(error.message||"تعذر حفظ الإعدادات");
+ }
+}
+
+function exitAdmin(){
+ ADMIN_PIN="";
+ showPage("homePage");
+}
+
+// -----------------------------------------
+// حماية عرض النصوص
+// -----------------------------------------
+
+function escapeHtml(value){
+ return String(value??"").replace(/[&<>"']/g,c=>({
+  "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+ }[c]));
+}
+
+function escapeAttr(value){
+ return escapeHtml(value);
+}
+
+// بدء الموقع
+loadSite();
+</script>
+</body>
+</html>
