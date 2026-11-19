@@ -3,899 +3,1270 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#17131a">
 <title>مركز لاڤيرن | LAVERNE CENTER</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Cairo:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
 <style>
 :root{
- --pink:#d99aaf;
- --pink2:#f0c8d5;
- --gold:#c6a46a;
- --bg:#171419;
- --card:#211d23;
+ --pink:#d88cae;
+ --gold:#c8a45d;
+ --bg:#17131a;
+ --card:#241d27;
  --text:#fff8f5;
- --muted:#b9adb3;
- --line:rgba(255,255,255,.1);
+ --muted:#b9aeb8;
+ --line:rgba(255,255,255,.12);
 }
 *{box-sizing:border-box}
 body{
- margin:0;
- font-family:'Cairo',sans-serif;
- background:var(--bg);
- color:var(--text);
+ margin:0;background:var(--bg);color:var(--text);
+ font-family:Cairo,sans-serif;min-height:100vh;
+ background-image:linear-gradient(180deg,rgba(23,19,26,.88),rgba(23,19,26,.97)),var(--bgimage);
+ background-size:cover;background-position:center;background-attachment:fixed;
 }
-button,input,textarea,select{font-family:inherit}
+button,input,textarea,select{font:inherit}
 button{cursor:pointer}
-.container{width:min(1100px,92%);margin:auto}
+button:disabled{opacity:.4;cursor:not-allowed}
 header{
- padding:22px 0;
+ padding:25px 16px 18px;text-align:center;
  border-bottom:1px solid var(--line);
- background:rgba(20,17,21,.9);
+ background:rgba(20,15,22,.6);backdrop-filter:blur(12px);
 }
-.head{
- display:flex;align-items:center;justify-content:space-between;
- gap:15px;flex-wrap:wrap;
+.logo{
+ border:1px solid rgba(200,164,93,.45);
+ width:76px;height:76px;border-radius:50%;
+ margin:auto auto 10px;display:flex;align-items:center;
+ justify-content:center;color:var(--gold);
+ font-family:Amiri,serif;font-size:27px;
+ box-shadow:0 0 28px rgba(200,164,93,.12);
+ user-select:none;touch-action:manipulation;
 }
-.logo{font-family:'Amiri',serif;font-size:29px;color:var(--gold)}
-.logo small{display:block;font-family:'Cairo';font-size:10px;letter-spacing:4px;color:var(--pink)}
-.admin-btn{
- background:transparent;color:var(--gold);
- border:1px solid var(--gold);padding:8px 15px;border-radius:25px;
+.brand{font-family:Amiri,serif;font-size:32px;color:var(--gold);margin:0}
+.subtitle{font-size:11px;letter-spacing:3px;color:var(--pink)}
+.tagline{color:var(--muted);font-size:13px;margin:12px auto 0;max-width:500px}
+.container{width:min(100% - 28px,900px);margin:24px auto 60px}
+.section-title{
+ font-family:Amiri,serif;color:var(--gold);
+ font-size:25px;margin:28px 0 14px;
 }
 .hero{
- min-height:350px;
- display:flex;align-items:center;justify-content:center;text-align:center;
- padding:55px 15px;
- background:
- linear-gradient(rgba(20,15,20,.65),rgba(20,15,20,.9)),
- var(--hero-image,linear-gradient(135deg,#39232e,#171419));
- background-size:cover;background-position:center;
+ border:1px solid rgba(200,164,93,.25);
+ border-radius:22px;padding:23px 18px;text-align:center;
+ background:linear-gradient(135deg,rgba(216,140,174,.12),rgba(200,164,93,.08));
 }
-.hero h1{
- font-family:'Amiri',serif;font-size:clamp(35px,7vw,60px);
- color:var(--pink2);margin:0 0 10px;
-}
-.hero p{color:#f1e5e9;max-width:650px;margin:10px auto;line-height:2}
-.gold-line{width:75px;height:2px;background:var(--gold);margin:20px auto}
-.section{padding:45px 0}
-.section-title{text-align:center;margin-bottom:30px}
-.section-title h2{
- font-family:'Amiri',serif;color:var(--gold);font-size:32px;margin:0;
-}
-.section-title p{color:var(--muted);font-size:13px}
-.services-grid{
- display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:18px;
-}
+.hero p{color:var(--muted);font-size:14px;line-height:2;margin:0}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:13px}
 .category{
- background:var(--card);border:1px solid var(--line);
- border-radius:17px;padding:20px;
+ position:relative;overflow:hidden;min-height:180px;
+ border:1px solid rgba(200,164,93,.28);
+ border-radius:19px;background:var(--card);
+ text-align:center;padding:0;transition:.2s;
+ box-shadow:0 12px 28px rgba(0,0,0,.2);
 }
-.category h3{color:var(--pink2);font-size:20px;margin:0 0 15px}
+.category:active{transform:scale(.97)}
+.category img{width:100%;height:125px;object-fit:cover;display:block}
+.category .noimg{
+ height:125px;display:grid;place-items:center;
+ font-family:Amiri,serif;font-size:42px;color:var(--gold);
+ background:linear-gradient(135deg,#3a2836,#29212b);
+}
+.category strong{display:block;padding:12px;color:var(--gold);font-size:15px}
+.category-view{display:none}
+.back{
+ background:transparent;color:var(--gold);border:1px solid var(--gold);
+ padding:8px 16px;border-radius:30px;margin-bottom:15px;
+}
 .service{
- display:flex;align-items:center;gap:12px;
- padding:12px 0;border-top:1px solid var(--line);
+ display:grid;grid-template-columns:105px 1fr;gap:13px;
+ padding:12px;background:var(--card);border:1px solid var(--line);
+ border-radius:16px;margin-bottom:12px;align-items:center;
 }
-.service img{width:58px;height:58px;object-fit:cover;border-radius:10px}
-.service-info{flex:1;min-width:0}
-.service-info strong{display:block;font-size:14px}
-.service-info small{color:var(--gold)}
-.service input{accent-color:var(--pink);width:19px;height:19px}
-.booking{
- max-width:760px;margin:auto;background:var(--card);
- border:1px solid var(--line);border-radius:20px;padding:25px;
+.service img,.service .noimg{
+ width:105px;height:105px;border-radius:12px;object-fit:cover;
+ background:#392b38;display:grid;place-items:center;color:var(--gold);
+ font-size:30px;
 }
-.field{margin-bottom:17px}
-.field label{display:block;margin-bottom:7px;color:var(--pink2);font-size:14px}
-.field input,.field textarea,.field select{
- width:100%;padding:13px;border-radius:10px;
- border:1px solid var(--line);background:#171419;color:white;
- outline:none;font-size:15px;
-}
-.field input:focus,.field textarea:focus{border-color:var(--gold)}
-.total{
- display:flex;justify-content:space-between;
- padding:17px 0;border-top:1px solid var(--line);
- color:var(--gold);font-weight:800;font-size:18px;
-}
-.primary{
- width:100%;border:0;border-radius:12px;padding:14px;
- background:linear-gradient(120deg,var(--pink),var(--gold));
- color:#24191d;font-weight:800;font-size:16px;
-}
-.primary:disabled{opacity:.5;cursor:not-allowed}
-.slots{display:grid;grid-template-columns:repeat(4,1fr);gap:9px}
-.slot{
- padding:10px 5px;border:1px solid var(--line);
- background:#171419;color:white;border-radius:9px;
-}
-.slot.selected{background:var(--gold);color:#21191b;border-color:var(--gold)}
-.slot:disabled{opacity:.25;cursor:not-allowed;text-decoration:line-through}
-.empty{color:var(--muted);text-align:center;padding:15px}
-.extra-block{
- background:var(--card);border:1px solid var(--line);
- padding:20px;border-radius:15px;margin:15px 0;
-}
-footer{
- border-top:1px solid var(--line);padding:30px 15px;
- text-align:center;color:var(--muted);font-size:13px;line-height:2;
-}
-.wa{
- position:fixed;bottom:20px;left:18px;
- background:#25d366;color:white;text-decoration:none;
- padding:12px 18px;border-radius:30px;font-weight:700;
- box-shadow:0 5px 20px #0005;z-index:5;
-}
-.toast{
- position:fixed;bottom:80px;left:50%;transform:translateX(-50%);
- background:#29232a;color:white;padding:12px 20px;
- border:1px solid var(--gold);border-radius:12px;
- z-index:100;display:none;max-width:90%;text-align:center;
-}
-.overlay{
- position:fixed;inset:0;background:#000b;z-index:20;
- display:none;align-items:center;justify-content:center;padding:15px;
-}
+.service h3{font-size:15px;margin:0 0 5px}
+.price{color:var(--gold);font-weight:700;font-size:14px}
+.desc{font-size:11px;color:var(--muted);line-height:1.8;margin:5px 0}
+.pick{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--pink);margin-top:8px}
+.pick input{accent-color:var(--pink);width:18px;height:18px}
 .panel{
- background:#211d23;border:1px solid var(--gold);
- border-radius:18px;padding:22px;width:min(750px,100%);
- max-height:90vh;overflow:auto;
+ background:var(--card);border:1px solid var(--line);
+ border-radius:18px;padding:17px;margin:14px 0;
 }
-.panel h2{color:var(--gold);margin-top:0}
-.panel input,.panel textarea,.panel select{
- width:100%;background:#171419;color:white;
- border:1px solid var(--line);border-radius:9px;
- padding:11px;margin:6px 0 13px;
+label{display:block;font-size:12px;color:var(--muted);margin:10px 0 5px}
+input,textarea,select{
+ width:100%;padding:12px;border-radius:11px;
+ border:1px solid var(--line);background:#17131a;color:white;
+ outline:none;min-width:0;
 }
-.panel label{color:var(--pink2);font-size:13px}
-.panel-actions{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}
-.small-btn{
- padding:9px 13px;border-radius:9px;
- background:#302832;color:white;border:1px solid var(--line);
+textarea{min-height:75px;resize:vertical}
+input:focus,textarea:focus,select:focus{border-color:var(--gold)}
+.btn{
+ border:0;border-radius:12px;padding:12px 17px;
+ background:linear-gradient(135deg,var(--gold),#a98445);
+ color:#211923;font-weight:800;
 }
-.small-btn.active{background:var(--gold);color:#21191b}
-.close{
- float:left;background:transparent;border:0;color:white;font-size:24px;
+.btn.pink{background:var(--pink);color:#241923}
+.btn.ghost{background:transparent;border:1px solid var(--gold);color:var(--gold)}
+.btn.danger{background:#7c354c;color:white}
+.btn.small{padding:7px 11px;font-size:11px}
+.btnrow{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.muted{color:var(--muted);font-size:12px;line-height:1.8}
+.total{display:flex;justify-content:space-between;color:var(--gold);font-weight:800;padding:12px 0}
+.slots{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:10px}
+.slot{
+ border:1px solid var(--line);border-radius:9px;padding:9px 3px;
+ background:#17131a;color:white;font-size:12px;
 }
-.admin-row{
- padding:13px 0;border-bottom:1px solid var(--line);
- line-height:1.9;font-size:13px;
+.slot.active{background:var(--gold);color:#211923;border-color:var(--gold)}
+.slot:disabled{opacity:.25;text-decoration:line-through}
+.offer{
+ border:1px solid rgba(200,164,93,.4);border-radius:16px;
+ overflow:hidden;background:var(--card);
 }
-.admin-row button{margin:4px}
-@media(max-width:500px){
- .booking{padding:17px}
- .slots{grid-template-columns:repeat(3,1fr)}
- .hero{min-height:300px}
+.offer img{width:100%;height:145px;object-fit:cover}
+.offer-content{padding:13px}
+.old{text-decoration:line-through;color:var(--muted);font-size:12px}
+.newprice{color:var(--gold);font-size:19px;font-weight:800}
+.hidden{display:none!important}
+footer{text-align:center;padding:30px 10px;color:var(--muted);font-size:11px}
+#admin{display:none}
+.admin-nav{display:flex;gap:7px;overflow:auto;padding:5px 0 12px}
+.admin-nav button{white-space:nowrap}
+.tab{display:none}
+.tab.active{display:block}
+.item-row{
+ background:#17131a;border:1px solid var(--line);
+ border-radius:12px;padding:12px;margin:10px 0;
+}
+.item-row h4{margin:0 0 5px;color:var(--gold)}
+hr{border:0;border-top:1px solid var(--line);margin:15px 0}
+.status{font-size:12px;color:var(--pink);margin-top:8px}
+@media(min-width:650px){
+ .grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+ .slots{grid-template-columns:repeat(6,1fr)}
 }
 </style>
 </head>
 
 <body>
-
 <header>
- <div class="container head">
-  <div class="logo">
-   مركز لاڤيرن
-   <small>LAVERNE CENTER</small>
-  </div>
-  <button class="admin-btn" onclick="openLogin()">الإدارة</button>
- </div>
+ <div class="logo" id="secretLogo" title="LAVERNE">L</div>
+ <h1 class="brand" id="brandName">مركز لاڤيرن</h1>
+ <div class="subtitle" id="brandTag">BEAUTY · CARE · ELEGANCE</div>
+ <p class="tagline" id="brandOwner">جنات الطياري</p>
 </header>
 
-<section class="hero" id="hero">
- <div class="container">
-  <div style="color:var(--gold);letter-spacing:4px;font-size:11px" id="kick">
-   BEAUTY · CARE · ELEGANCE
-  </div>
-  <div class="gold-line"></div>
-  <h1 id="brandTitle">مركز لاڤيرن</h1>
+<main class="container" id="customer">
+ <section class="hero">
   <p id="heroText">اختاري خدماتك، وحدّدي الوقت المناسب، وأكدي حجزك في أقل من دقيقة.</p>
-  <div style="color:var(--pink2);margin-top:15px" id="tagText">جنات الطياري</div>
+ </section>
+
+ <section id="offersSection" class="hidden">
+  <h2 class="section-title">عروض لاڤيرن</h2>
+  <div class="grid" id="offersList"></div>
+ </section>
+
+ <section id="categoriesView">
+  <h2 class="section-title">اكتشفي خدماتنا</h2>
+  <div class="grid" id="categoriesList"></div>
+ </section>
+
+ <section id="categoryView" class="category-view">
+  <button class="back" id="backCategories">← العودة للأقسام</button>
+  <h2 class="section-title" id="currentCategoryTitle"></h2>
+  <div id="servicesList"></div>
+ </section>
+
+ <section class="panel" id="bookingPanel">
+  <h2 class="section-title" style="margin-top:0">حجز موعدك</h2>
+  <p class="muted">اختاري الخدمات من الأقسام، وبعدها حددي اليوم والوقت المناسب.</p>
+  <div id="selectedServices" class="muted">لم تختاري أي خدمة بعد.</div>
+  <div class="total"><span>الإجمالي التقديري</span><span id="totalText">0 د.ل</span></div>
+  <p class="muted" id="priceNotice"></p>
+
+  <label>الاسم</label>
+  <input id="customerName" placeholder="اكتبي اسمك">
+
+  <label>رقم الهاتف</label>
+  <input id="customerPhone" type="tel" placeholder="09xxxxxxxx">
+
+  <label>تاريخ الحجز</label>
+  <input id="bookingDate" type="date">
+
+  <label>الوقت المتاح</label>
+  <div class="slots" id="slotsList"></div>
+  <p class="muted" id="slotHint">اختاري الخدمات أولاً لعرض المواعيد المتاحة.</p>
+
+  <button class="btn pink" id="confirmBooking" style="width:100%;margin-top:15px">تأكيد الحجز عبر واتساب</button>
+  <p class="status" id="bookingStatus"></p>
+ </section>
+
+ <section class="panel">
+  <h2 class="section-title" style="margin-top:0">معلومات المركز</h2>
+  <p class="muted" id="addressText"></p>
+  <p class="muted" id="hoursText"></p>
+ </section>
+</main>
+
+<!-- الإدارة -->
+<main class="container" id="admin">
+ <button class="back" id="exitAdmin">← العودة للموقع</button>
+ <h2 class="section-title">لوحة إدارة لاڤيرن</h2>
+ <div class="admin-nav">
+  <button class="btn small" data-tab="appointments">الحجوزات</button>
+  <button class="btn small ghost" data-tab="servicesAdmin">الأقسام والخدمات</button>
+  <button class="btn small ghost" data-tab="offersAdmin">العروض</button>
+  <button class="btn small ghost" data-tab="appearanceAdmin">التصميم</button>
+  <button class="btn small ghost" data-tab="contactAdmin">المعلومات</button>
+  <button class="btn small ghost" data-tab="blocksAdmin">المواعيد</button>
  </div>
-</section>
 
-<main class="container">
-
- <section class="section">
-  <div class="section-title">
-   <h2>خدماتنا</h2>
-   <p>اختاري الخدمات التي ترغبين بها</p>
-   <div class="gold-line"></div>
-  </div>
-  <div id="secs" class="services-grid">
-   <div class="empty">جاري تحميل الخدمات...</div>
+ <section class="tab active" id="appointments">
+  <div class="panel">
+   <h3>الحجوزات المسجلة</h3>
+   <button class="btn small" id="refreshBookings">تحديث الحجوزات</button>
+   <div id="bookingsList"></div>
   </div>
  </section>
 
- <section class="section" id="blocksSection" style="display:none">
-  <div class="section-title"><h2>عروضنا وإضافاتنا</h2></div>
-  <div id="blocks"></div>
- </section>
-
- <section class="section">
-  <div class="section-title">
-   <h2>احجزي موعدك</h2>
-   <p>خطوات بسيطة لتأكيد موعدك</p>
-   <div class="gold-line"></div>
+ <section class="tab" id="servicesAdmin">
+  <div class="panel">
+   <h3>إضافة قسم جديد</h3>
+   <label>اسم القسم</label>
+   <input id="newCategoryName" placeholder="مثلاً: الرموش">
+   <label>عدد الحجوزات المتزامنة لهذا القسم</label>
+   <input id="newCategoryCapacity" type="number" min="1" value="1">
+   <label>صورة القسم</label>
+   <input id="newCategoryImage" type="file" accept="image/*">
+   <button class="btn" id="addCategory">إضافة القسم</button>
   </div>
-
-  <div class="booking">
-   <div class="field">
-    <label>الاسم الكامل</label>
-    <input id="customerName" placeholder="اكتبي اسمك">
-   </div>
-
-   <div class="field">
-    <label>رقم الهاتف</label>
-    <input id="customerPhone" type="tel" placeholder="09xxxxxxxx">
-   </div>
-
-   <div class="field">
-    <label>تاريخ الحجز</label>
-    <input id="bookingDate" type="date">
-   </div>
-
-   <div class="field">
-    <label>اختاري الوقت المناسب</label>
-    <div id="slots" class="slots">
-     <div class="empty">اختاري التاريخ أولاً</div>
-    </div>
-   </div>
-
-   <div class="total">
-    <span>الإجمالي</span>
-    <span id="tot">0 د.ل</span>
-   </div>
-
-   <button class="primary" id="bookBtn" onclick="submitBooking()">
-    تأكيد الحجز
-   </button>
-   <p style="color:var(--muted);font-size:11px;text-align:center;margin-top:12px">
-    سيتم إرسال طلب الحجز وتأكيده حسب المواعيد المتاحة
-   </p>
+  <div class="panel">
+   <h3>الأقسام والخدمات الحالية</h3>
+   <div id="adminCategories"></div>
   </div>
  </section>
 
+ <section class="tab" id="offersAdmin">
+  <div class="panel">
+   <h3>إضافة عرض جديد</h3>
+   <label>عنوان العرض</label>
+   <input id="offerTitle">
+   <label>وصف العرض</label>
+   <textarea id="offerDesc"></textarea>
+   <label>السعر قبل الخصم</label>
+   <input id="offerOld" type="number" min="0">
+   <label>السعر بعد الخصم</label>
+   <input id="offerNew" type="number" min="0">
+   <label>صورة العرض</label>
+   <input id="offerImage" type="file" accept="image/*">
+   <label>تاريخ بداية العرض</label>
+   <input id="offerStart" type="date">
+   <label>تاريخ نهاية العرض</label>
+   <input id="offerEnd" type="date">
+   <button class="btn" id="addOffer">حفظ العرض</button>
+  </div>
+  <div class="panel">
+   <h3>العروض الحالية</h3>
+   <div id="adminOffers"></div>
+  </div>
+ </section>
+
+ <section class="tab" id="appearanceAdmin">
+  <div class="panel">
+   <h3>مظهر الموقع</h3>
+   <label>لون الوردي</label>
+   <input id="colorPink" type="color">
+   <label>لون الذهبي</label>
+   <input id="colorGold" type="color">
+   <label>لون الخلفية</label>
+   <input id="colorBg" type="color">
+   <label>لون البطاقات</label>
+   <input id="colorCard" type="color">
+   <label>لون الكتابة</label>
+   <input id="colorText" type="color">
+   <label>صورة خلفية الموقع</label>
+   <input id="backgroundImage" type="file" accept="image/*">
+   <button class="btn" id="saveAppearance">حفظ التصميم</button>
+  </div>
+ </section>
+
+ <section class="tab" id="contactAdmin">
+  <div class="panel">
+   <h3>بيانات المركز</h3>
+   <label>اسم المركز</label>
+   <input id="editName">
+   <label>الاسم الإضافي</label>
+   <input id="editOwner">
+   <label>النص التعريفي</label>
+   <input id="editTag">
+   <label>وصف الواجهة</label>
+   <textarea id="editHero"></textarea>
+   <label>رقم واتساب مع مفتاح الدولة</label>
+   <input id="editWa" placeholder="2189xxxxxxxx">
+   <label>العنوان</label>
+   <input id="editAddress">
+   <label>مواعيد العمل</label>
+   <input id="editHours">
+   <label>ساعة بداية العمل (24 ساعة)</label>
+   <input id="editOpen" type="number" min="0" max="23">
+   <label>ساعة نهاية العمل (24 ساعة)</label>
+   <input id="editClose" type="number" min="1" max="24">
+   <button class="btn" id="saveContact">حفظ المعلومات</button>
+  </div>
+ </section>
+
+ <section class="tab" id="blocksAdmin">
+  <div class="panel">
+   <h3>حظر موعد</h3>
+   <label>اليوم</label>
+   <input type="date" id="blockDate">
+   <label>الوقت</label>
+   <select id="blockTime"></select>
+   <label>القسم</label>
+   <select id="blockCategory"></select>
+   <p class="muted">اختاري «كل الأقسام» لحظر الموعد على المركز بالكامل.</p>
+   <button class="btn" id="addBlock">حظر الموعد</button>
+  </div>
+  <div class="panel">
+   <h3>المواعيد المحظورة</h3>
+   <div id="blocksList"></div>
+  </div>
+ </section>
+ <p class="status" id="adminStatus"></p>
 </main>
 
 <footer>
- <div id="hoursText">يوميًا من 10 صباحًا إلى 9 مساءً</div>
- <div id="addressText">صرمان عطاف</div>
- <div style="color:var(--gold);margin-top:10px">LAVERNE CENTER</div>
+ <div id="footerName">LAVERNE CENTER</div>
+ <div>BEAUTY · CARE · ELEGANCE</div>
 </footer>
 
-<a class="wa" id="waLink" href="https://wa.me/218912744233" target="_blank">واتساب</a>
-
-<div class="toast" id="toast"></div>
-
-<!-- تسجيل دخول الإدارة -->
-<div class="overlay" id="loginOverlay">
- <div class="panel" style="max-width:380px">
-  <button class="close" onclick="closeLogin()">×</button>
-  <h2>دخول الإدارة</h2>
-  <label>الرقم السري</label>
-  <input id="adminPin" type="password" placeholder="أدخلي الرقم السري">
-  <button class="primary" onclick="loginAdmin()">دخول</button>
- </div>
-</div>
-
-<!-- لوحة الإدارة -->
-<div class="overlay" id="adminOverlay">
- <div class="panel">
-  <button class="close" onclick="closeAdmin()">×</button>
-  <h2>لوحة إدارة لاڤيرن</h2>
-
-  <div class="panel-actions">
-   <button class="small-btn active" onclick="showTab('appointments',this)">الحجوزات</button>
-   <button class="small-btn" onclick="showTab('settings',this)">الإعدادات</button>
-   <button class="small-btn" onclick="showTab('services',this)">الخدمات</button>
-   <button class="small-btn" onclick="showTab('blocks',this)">إدارة المواعيد</button>
-  </div>
-
-  <div id="tab-appointments">
-   <h3 style="color:var(--pink2)">قائمة الحجوزات</h3>
-   <button class="small-btn" onclick="loadAppointments()">تحديث الحجوزات</button>
-   <div id="appointmentList"><p class="empty">اضغطي تحديث الحجوزات</p></div>
-  </div>
-
-  <div id="tab-settings" style="display:none">
-   <h3 style="color:var(--pink2)">بيانات المركز</h3>
-
-   <label>اسم المركز</label>
-   <input id="setName">
-
-   <label>اسم صاحبة المركز أو العبارة التعريفية</label>
-   <input id="setTag">
-
-   <label>النص الصغير أعلى الصفحة</label>
-   <input id="setKick">
-
-   <label>النص الرئيسي</label>
-   <textarea id="setHero" rows="3"></textarea>
-
-   <label>رقم واتساب مع مفتاح الدولة بدون +</label>
-   <input id="setWa">
-
-   <label>العنوان</label>
-   <input id="setAddress">
-
-   <label>ساعات العمل</label>
-   <input id="setHours">
-
-   <label>ساعة بداية العمل بنظام 24 ساعة</label>
-   <input id="setOpen" type="number" min="0" max="23">
-
-   <label>ساعة نهاية العمل بنظام 24 ساعة</label>
-   <input id="setClose" type="number" min="1" max="24">
-
-   <label>رابط صورة خلفية الصفحة (اختياري)</label>
-   <input id="setBg">
-
-   <label>المظهر</label>
-   <select id="setTheme">
-    <option value="night">داكن</option>
-    <option value="light">فاتح</option>
-   </select>
-
-   <button class="primary" onclick="saveSettings()">حفظ الإعدادات</button>
-  </div>
-
-  <div id="tab-services" style="display:none">
-   <h3 style="color:var(--pink2)">تعديل الخدمات والأسعار</h3>
-   <p style="font-size:12px;color:var(--muted)">
-    عدّلي البيانات بصيغة JSON، مع المحافظة على ترتيب الأقواس والفواصل.
-   </p>
-   <textarea id="servicesJson" rows="17" dir="ltr" style="font-family:monospace;font-size:12px"></textarea>
-   <button class="primary" onclick="saveServices()">حفظ الخدمات</button>
-  </div>
-
-  <div id="tab-blocks" style="display:none">
-   <h3 style="color:var(--pink2)">حظر موعد أو إتاحته</h3>
-
-   <label>التاريخ</label>
-   <input id="blockDate" type="date">
-
-   <label>الوقت</label>
-   <input id="blockTime" type="time">
-
-   <div class="panel-actions">
-    <button class="small-btn" onclick="changeBlock('block')">حظر الموعد</button>
-    <button class="small-btn" onclick="changeBlock('unblock')">إلغاء الحظر</button>
-   </div>
-   <p style="font-size:12px;color:var(--muted)">
-    استخدمي هذه الخاصية لمنع الحجز في وقت محدد أو إتاحته مرة أخرى.
-   </p>
-  </div>
-
- </div>
-</div>
-
 <script>
-/* رابط السكربت */
-var API="https://script.google.com/macros/s/AKfycbyYL5Ea_R9r7Bwm0n2vniJRjZFYT1lxX5THzQ5eQy-89GLed8you5mxhXeSQ6VsQcl2/exec";
+/* رابط قاعدة البيانات */
+const API = "https://script.google.com/macros/s/AKfycbyYL5Ea_R9r7Bwm0n2vniJRjZFYT1lxX5THzQ5eQy-89GLed8you5mxhXeSQ6VsQcl2/exec";
 
-var PIN="1234";
+let CFG = null;
+let BOOKED = {};
+let BOOKINGS = [];
+let BLOCKS = [];
+let SELECTED = [];
+let CURRENT_CATEGORY = null;
+let SELECTED_TIME = "";
+let ADMIN_PIN = "";
+let ADMIN_MODE = false;
+let ADMIN_DATA = {};
 
-var DEF={
- brand:"LAVERNE CENTER",
- name:"مركز لاڤيرن",
- tag:"جنات الطياري",
- kick:"BEAUTY · CARE · ELEGANCE",
- hero:"اختاري خدماتك، وحدّدي الوقت المناسب، وأكدي حجزك في أقل من دقيقة.",
- blocks:[],
- wa:"218912744233",
- theme:"night",
- bgimg:"",
- open:10,
- close:21,
- hours:"يوميًا من 10 صباحًا إلى 9 مساءً",
- addr:"صرمان عطاف",
- sections:[
-  {t:"الشعر",items:[
-   {n:"قص وتصفيف",p:40},
-   {n:"صبغة كاملة",p:150},
-   {n:"علاج بالكيراتين",p:250}
-  ]},
-  {t:"البشرة",items:[
-   {n:"تنظيف بشرة عميق",p:90},
-   {n:"جلسة ترطيب",p:70}
-  ]},
-  {t:"الأظافر",items:[
-   {n:"مانيكير",p:35,i:"https://lh3.googleusercontent.com/d/1Gtp704uISL2J0tvhZRhaQ46GY_F0pSb0"},
-   {n:"باديكير",p:45}
-  ]},
-  {t:"المكياج",items:[
-   {n:"مكياج سهرة",p:150},
-   {n:"مكياج وتسريحة عروس",p:700}
-  ]}
- ]
-};
+/* أدوات عامة */
+const $ = id => document.getElementById(id);
 
-var C=JSON.parse(JSON.stringify(DEF));
-var B={};
-var ROWS=[];
-var selectedSlot="";
-var selectedServices=[];
-var adminTab="appointments";
-
-function $(id){return document.getElementById(id)}
-
-function toast(msg){
- var el=$("toast");
- el.textContent=msg;
- el.style.display="block";
- clearTimeout(window.toastTimer);
- window.toastTimer=setTimeout(function(){el.style.display="none"},3500);
+function esc(s){
+ return String(s == null ? "" : s).replace(/[&<>"']/g,c=>({
+  "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+ }[c]));
 }
 
-function escapeHtml(s){
- return String(s==null?"":s).replace(/[&<>"']/g,function(c){
-  return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];
- });
+function money(n){
+ return Number(n || 0).toLocaleString("en-US") + " د.ل";
 }
 
-function apiPost(data){
- return fetch(API,{
+function setStatus(id,msg){
+ $(id).textContent = msg || "";
+}
+
+async function apiGet(){
+ const r = await fetch(API + "?t=" + Date.now());
+ const j = await r.json();
+ if(!j.ok) throw new Error(j.error || "تعذر تحميل البيانات");
+ return j;
+}
+
+async function apiPost(data){
+ const r = await fetch(API,{
   method:"POST",
   headers:{"Content-Type":"text/plain;charset=utf-8"},
   body:JSON.stringify(data)
- }).then(function(r){return r.json()});
+ });
+ const j = await r.json();
+ if(!j.ok) throw new Error(j.error || "تعذر تنفيذ الطلب");
+ return j;
 }
 
-function applyTheme(){
- if(C.theme==="light"){
-  document.documentElement.style.setProperty("--bg","#f8f0f2");
-  document.documentElement.style.setProperty("--card","#fff");
-  document.documentElement.style.setProperty("--text","#352a30");
-  document.documentElement.style.setProperty("--muted","#766b70");
-  document.documentElement.style.setProperty("--line","rgba(50,30,40,.13)");
- }else{
-  document.documentElement.style.setProperty("--bg","#171419");
-  document.documentElement.style.setProperty("--card","#211d23");
-  document.documentElement.style.setProperty("--text","#fff8f5");
-  document.documentElement.style.setProperty("--muted","#b9adb3");
-  document.documentElement.style.setProperty("--line","rgba(255,255,255,.1)");
+function adminPost(data){
+ return apiPost(Object.assign({},data,{pin:ADMIN_PIN}));
+}
+
+function makeId(prefix){
+ return prefix + "_" + Date.now() + "_" + Math.random().toString(36).slice(2,7);
+}
+
+function activeOffers(){
+ const today = new Date().toISOString().slice(0,10);
+ return (CFG.offers || []).filter(o =>
+  o.active !== false &&
+  (!o.start || o.start <= today) &&
+  (!o.end || o.end >= today)
+ );
+}
+
+function priceInfo(s){
+ const type = s.priceType || "fixed";
+ if(type === "consult") return "السعر يحدد بعد المعاينة";
+ if(type === "range") return money(s.minPrice) + " - " + money(s.maxPrice);
+ return money(s.p);
+}
+
+function serviceValue(s){
+ if((s.priceType || "fixed") !== "fixed") return null;
+ return Number(s.p || 0);
+}
+
+function imageMarkup(url,alt){
+ return url
+  ? '<img src="'+esc(url)+'" alt="'+esc(alt)+'" loading="lazy">'
+  : '<div class="noimg">✦</div>';
+}
+
+/* تحميل الموقع */
+async function init(){
+ try{
+  const data = await apiGet();
+  CFG = data.cfg || {};
+  BOOKED = data.booked || {};
+  BOOKINGS = data.bookings || [];
+  BLOCKS = data.blocks || [];
+
+  normalizeConfig();
+  renderSite();
+  renderOffers();
+  renderCategories();
+  setMinDates();
+ }catch(e){
+  alert("تعذر الاتصال ببيانات المركز: " + e.message);
  }
 }
 
-function renderHeader(){
- $("brandTitle").textContent=C.name||DEF.name;
- $("tagText").textContent=C.tag||"";
- $("kick").textContent=C.kick||DEF.kick;
- $("heroText").textContent=C.hero||DEF.hero;
- $("hoursText").textContent=C.hours||"";
- $("addressText").textContent=C.addr||"";
- $("waLink").href="https://wa.me/"+String(C.wa||DEF.wa).replace(/\D/g,"");
+function normalizeConfig(){
+ if(!CFG.sections) CFG.sections = [];
+ if(!CFG.offers) CFG.offers = [];
+ CFG.sections.forEach((s,i)=>{
+  if(!s.id) s.id = "category_" + i;
+  if(!Array.isArray(s.items)) s.items = [];
+  if(!s.capacity || Number(s.capacity)<1) s.capacity = 1;
+  s.items.forEach((x,j)=>{
+   if(!x.id) x.id = s.id + "_service_" + j;
+   if(!x.priceType) x.priceType = "fixed";
+  });
+ });
+ if(!CFG.colors) CFG.colors = {};
+}
 
- if(C.bgimg){
-  $("hero").style.backgroundImage=
-   "linear-gradient(rgba(20,15,20,.65),rgba(20,15,20,.9)),url('"+C.bgimg+"')";
+function renderSite(){
+ $("brandName").textContent = CFG.name || "مركز لاڤيرن";
+ $("brandTag").textContent = CFG.kick || "";
+ $("brandOwner").textContent = CFG.tag || "";
+ $("heroText").textContent = CFG.hero || "";
+ $("addressText").textContent = "العنوان: " + (CFG.addr || "");
+ $("hoursText").textContent = CFG.hours || "";
+ $("footerName").textContent = CFG.brand || "LAVERNE CENTER";
+
+ const c = CFG.colors || {};
+ if(c.pink) document.documentElement.style.setProperty("--pink",c.pink);
+ if(c.gold) document.documentElement.style.setProperty("--gold",c.gold);
+ if(c.background) document.documentElement.style.setProperty("--bg",c.background);
+ if(c.card) document.documentElement.style.setProperty("--card",c.card);
+ if(c.text) document.documentElement.style.setProperty("--text",c.text);
+
+ if(CFG.bgimg){
+  document.documentElement.style.setProperty(
+   "--bgimage",'url("'+CFG.bgimg.replace(/"/g,"")+'")'
+  );
  }
 }
 
-function secs(){
- var L=$("secs");
- L.innerHTML="";
+function renderCategories(){
+ $("categoriesList").innerHTML = "";
+ CFG.sections.forEach(s=>{
+  const b = document.createElement("button");
+  b.className = "category";
+  b.innerHTML = imageMarkup(s.image,s.t) + "<strong>"+esc(s.t)+"</strong>";
+  b.addEventListener("click",()=>openCategory(s.id));
+  $("categoriesList").appendChild(b);
+ });
+}
 
- (C.sections||[]).forEach(function(s,si){
-  var box=document.createElement("div");
-  box.className="category";
+function openCategory(id){
+ CURRENT_CATEGORY = id;
+ const s = CFG.sections.find(x=>x.id===id);
+ if(!s) return;
+ $("categoriesView").classList.add("hidden");
+ $("categoryView").style.display = "block";
+ $("currentCategoryTitle").textContent = s.t;
+ $("servicesList").innerHTML = "";
 
-  var h=document.createElement("h3");
-  h.textContent=s.t||"الخدمات";
-  box.appendChild(h);
+ s.items.forEach(item=>{
+  const row = document.createElement("div");
+  row.className = "service";
+  const checked = SELECTED.some(x=>x.id===item.id);
+  row.innerHTML =
+   imageMarkup(item.i,item.n) +
+   '<div><h3>'+esc(item.n)+'</h3>'+
+   '<div class="price">'+esc(priceInfo(item))+'</div>'+
+   '<p class="desc">'+esc(item.desc || "")+'</p>'+
+   '<label class="pick"><input type="checkbox" '+(checked?"checked":"")+
+   '> إضافة إلى حجزي</label></div>';
 
-  (s.items||[]).forEach(function(it,ii){
-   var key=si+"."+ii;
-   var row=document.createElement("label");
-   row.className="service";
-
-   if(it.i){
-    var img=document.createElement("img");
-    img.src=it.i;
-    img.alt=it.n||"";
-    row.appendChild(img);
+  row.querySelector("input").addEventListener("change",e=>{
+   if(e.target.checked){
+    SELECTED.push({
+     id:item.id,
+     categoryId:s.id,
+     categoryName:s.t,
+     name:item.n,
+     priceType:item.priceType || "fixed",
+     p:item.p,
+     minPrice:item.minPrice,
+     maxPrice:item.maxPrice
+    });
+   }else{
+    SELECTED = SELECTED.filter(x=>x.id!==item.id);
    }
-
-   var info=document.createElement("span");
-   info.className="service-info";
-
-   var name=document.createElement("strong");
-   name.textContent=it.n||"خدمة";
-   var price=document.createElement("small");
-   price.textContent=Number(it.p||0)+" د.ل";
-
-   info.appendChild(name);
-   info.appendChild(price);
-   row.appendChild(info);
-
-   var check=document.createElement("input");
-   check.type="checkbox";
-   check.value=key;
-   check.addEventListener("change",function(){
-    updateChosen();
-   });
-   row.appendChild(check);
-
-   box.appendChild(row);
+   updateSelection();
+   renderSlots();
   });
 
-  L.appendChild(box);
- });
- updateChosen();
-}
-
-function updateChosen(){
- selectedServices=[];
- var checks=document.querySelectorAll("#secs input[type=checkbox]");
- var total=0;
-
- checks.forEach(function(ch){
-  if(ch.checked){
-   var parts=ch.value.split(".");
-   var it=C.sections[Number(parts[0])].items[Number(parts[1])];
-   if(it){
-    selectedServices.push(it.n);
-    total+=Number(it.p||0);
-   }
-  }
+  $("servicesList").appendChild(row);
  });
 
- $("tot").textContent=total+" د.ل";
- return {n:selectedServices,t:total};
+ updateSelection();
 }
 
-function chosen(){return updateChosen()}
+$("backCategories").onclick = ()=>{
+ $("categoryView").style.display = "none";
+ $("categoriesView").classList.remove("hidden");
+};
 
-function getDate(){
- return $("bookingDate").value;
+function updateSelection(){
+ const box = $("selectedServices");
+ if(!SELECTED.length){
+  box.textContent = "لم تختاري أي خدمة بعد.";
+ }else{
+  box.innerHTML = SELECTED.map(x=>
+   "<div>"+esc(x.categoryName)+" — "+esc(x.name)+
+   " <span class='price'>"+esc(priceInfo(x))+"</span></div>"
+  ).join("");
+ }
+
+ let total = 0;
+ let estimate = false;
+
+ SELECTED.forEach(x=>{
+  if(x.priceType === "fixed") total += Number(x.p || 0);
+  else estimate = true;
+ });
+
+ $("totalText").textContent = estimate
+  ? "يحدد جزء من السعر بعد المعاينة"
+  : money(total);
+
+ $("priceNotice").textContent = SELECTED.some(x=>x.priceType==="range")
+  ? "أسعار بعض الخدمات تقديرية، ويتحدد السعر النهائي بعد المعاينة."
+  : SELECTED.some(x=>x.priceType==="consult")
+  ? "السعر النهائي لبعض الخدمات يحدد بعد المعاينة."
+  : "";
 }
 
-function timeLabel(h){
- var suffix=h>=12?"مساءً":"صباحًا";
- var hour=h%12;
- if(hour===0)hour=12;
- return hour+":00 "+suffix;
+/* المواعيد */
+function setMinDates(){
+ const today = new Date();
+ const local = new Date(today.getTime()-today.getTimezoneOffset()*60000)
+  .toISOString().slice(0,10);
+ $("bookingDate").min = local;
+ $("blockDate").min = local;
+ $("bookingDate").value = local;
 }
 
-function slots(){
- var L=$("slots");
- L.innerHTML="";
- selectedSlot="";
+function categoryKeys(){
+ return [...new Set(SELECTED.map(x=>x.categoryId))];
+}
 
- var d=getDate();
- if(!d){
-  L.innerHTML='<div class="empty">اختاري التاريخ أولاً</div>';
+function timeList(){
+ const open = Math.max(0,Number(CFG.open || 10));
+ const close = Math.min(24,Number(CFG.close || 21));
+ const arr = [];
+ for(let h=open;h<close;h++){
+  arr.push(String(h).padStart(2,"0")+":00");
+  if(h+0.5 < close) arr.push(String(h).padStart(2,"0")+":30");
+ }
+ return arr;
+}
+
+function isSlotBusy(date,time){
+ const keys = categoryKeys();
+ if(!keys.length) return true;
+
+ const day = BOOKED[date] || {};
+ return keys.some(key=>{
+  const s = CFG.sections.find(x=>x.id===key);
+  const capacity = Math.max(1,Number(s && s.capacity) || 1);
+  const times = (day[key] || []).filter(x=>x===time);
+  return times.length >= capacity;
+ }) || (day["*"] || []).includes(time);
+}
+
+function renderSlots(){
+ const date = $("bookingDate").value;
+ const keys = categoryKeys();
+ $("slotsList").innerHTML = "";
+ SELECTED_TIME = "";
+
+ if(!keys.length){
+  $("slotHint").textContent = "اختاري خدمة واحدة على الأقل أولاً.";
   return;
  }
 
- var now=new Date();
- var today=now.getFullYear()+"-"+String(now.getMonth()+1).padStart(2,"0")+"-"+String(now.getDate()).padStart(2,"0");
-
- for(var h=Number(C.open||10);h<Number(C.close||21);h++){
-  var time=String(h).padStart(2,"0")+":00";
-  var btn=document.createElement("button");
-  btn.type="button";
-  btn.className="slot";
-  btn.textContent=timeLabel(h);
-
-  var booked=B[d]||[];
-  var isBooked=booked.indexOf(time)!==-1;
-  var isPast=d<today||(d===today&&h<=now.getHours());
-
-  if(isBooked||isPast){
-   btn.disabled=true;
-  }else{
-   btn.addEventListener("click",function(t,b){
-    return function(){
-     document.querySelectorAll(".slot").forEach(function(x){
-      x.classList.remove("selected");
-     });
-     b.classList.add("selected");
-     selectedSlot=t;
-    };
-   }(time,btn));
-  }
-
-  L.appendChild(btn);
- }
-
- if(!L.children.length){
-  L.innerHTML='<div class="empty">لا توجد أوقات متاحة</div>';
- }
-}
-
-function renderBlocks(){
- var arr=C.blocks||[];
- var section=$("blocksSection");
- var L=$("blocks");
- L.innerHTML="";
-
- if(!arr.length){
-  section.style.display="none";
-  return;
- }
-
- section.style.display="block";
-
- arr.forEach(function(b){
-  var div=document.createElement("div");
-  div.className="extra-block";
-  div.innerHTML="<h3>"+escapeHtml(b.t||"")+"</h3><p>"+escapeHtml(b.d||"")+"</p>";
-  L.appendChild(div);
+ $("slotHint").textContent = "المواعيد المتاحة تظهر حسب الأقسام التي اخترتيها.";
+ timeList().forEach(t=>{
+  const busy = isSlotBusy(date,t);
+  const b = document.createElement("button");
+  b.className = "slot";
+  b.textContent = t;
+  b.disabled = busy;
+  b.onclick = ()=>{
+   SELECTED_TIME = t;
+   document.querySelectorAll(".slot").forEach(x=>x.classList.remove("active"));
+   b.classList.add("active");
+  };
+  $("slotsList").appendChild(b);
  });
 }
 
-function render(){
- applyTheme();
- renderHeader();
- secs();
+$("bookingDate").addEventListener("change",renderSlots);
+
+/* إنشاء رسالة واتساب */
+function bookingMessage(name,phone,date,time){
+ let lines = [
+  "حجز جديد - مركز لاڤيرن",
+  "الاسم: "+name,
+  "الهاتف: "+phone,
+  "الخدمات:"
+ ];
+
+ SELECTED.forEach(s=>{
+  lines.push("- "+s.categoryName+": "+s.name+" ("+priceInfo(s)+")");
+ });
+
+ let total = 0;
+ let estimate = false;
+ SELECTED.forEach(s=>{
+  if(s.priceType==="fixed") total += Number(s.p || 0);
+  else estimate = true;
+ });
+
+ lines.push("التاريخ: "+date);
+ lines.push("الوقت: "+time);
+ lines.push(estimate
+  ? "الإجمالي: توجد خدمات يتحدد سعرها بعد المعاينة."
+  : "الإجمالي: "+money(total));
+
+ return lines.join("\n");
+}
+
+$("confirmBooking").onclick = async ()=>{
+ const name = $("customerName").value.trim();
+ const phone = $("customerPhone").value.trim();
+ const date = $("bookingDate").value;
+ const time = SELECTED_TIME;
+ const keys = categoryKeys();
+
+ if(!name || !phone || !date || !time || !SELECTED.length){
+  setStatus("bookingStatus","يرجى اختيار الخدمات وإكمال الاسم والهاتف واليوم والوقت.");
+  return;
+ }
+
+ if(!/^[0-9+\s()-]{7,20}$/.test(phone)){
+  setStatus("bookingStatus","يرجى التأكد من رقم الهاتف.");
+  return;
+ }
+
+ if(isSlotBusy(date,time)){
+  setStatus("bookingStatus","هذا الموعد لم يعد متاحًا. اختاري موعدًا آخر.");
+  renderSlots();
+  return;
+ }
+
+ const whatsapp = window.open("about:blank","_blank");
+
+ $("confirmBooking").disabled = true;
+ setStatus("bookingStatus","جاري تسجيل الحجز...");
+
+ try{
+  const services = SELECTED.map(s=>
+   s.categoryName+" - "+s.name+" ("+priceInfo(s)+")"
+  ).join("، ");
+
+  let total = 0;
+  let estimate = false;
+  SELECTED.forEach(s=>{
+   if(s.priceType==="fixed") total += Number(s.p || 0);
+   else estimate = true;
+  });
+
+  const result = await apiPost({
+   a:"book",
+   date:date,
+   time:time,
+   name:name,
+   phone:phone,
+   services:services,
+   total:estimate ? "بعد المعاينة" : total,
+   categoryKeys:keys
+  });
+
+  const message = bookingMessage(name,phone,date,time);
+  const number = String(CFG.wa || "").replace(/\D/g,"");
+  const waUrl = "https://wa.me/"+number+"?text="+encodeURIComponent(message);
+
+  setStatus("bookingStatus","تم تسجيل حجزك. افتحي واتساب لإرسال تفاصيل الحجز.");
+  if(whatsapp) whatsapp.location.href = waUrl;
+  else window.location.href = waUrl;
+
+  SELECTED = [];
+  SELECTED_TIME = "";
+  updateSelection();
+  renderSlots();
+  await reloadPublicData();
+
+ }catch(e){
+  if(whatsapp) whatsapp.close();
+  setStatus("bookingStatus",e.message);
+ }finally{
+  $("confirmBooking").disabled = false;
+ }
+};
+
+async function reloadPublicData(){
+ const d = await apiGet();
+ CFG = d.cfg || CFG;
+ BOOKED = d.booked || {};
+ BOOKINGS = d.bookings || [];
+ BLOCKS = d.blocks || [];
+ normalizeConfig();
+ renderSite();
+ renderCategories();
+ renderOffers();
+ renderSlots();
+}
+
+/* العروض */
+function renderOffers(){
+ const offers = activeOffers();
+ $("offersSection").classList.toggle("hidden",!offers.length);
+ $("offersList").innerHTML = offers.map(o=>
+  '<div class="offer">'+
+  (o.image?'<img src="'+esc(o.image)+'" alt="">':'')+
+  '<div class="offer-content"><h3>'+esc(o.title)+'</h3>'+
+  '<p class="muted">'+esc(o.desc || "")+'</p>'+
+  '<span class="old">'+money(o.oldPrice)+'</span> '+
+  '<span class="newprice">'+money(o.newPrice)+'</span>'+
+  '</div></div>'
+ ).join("");
+}
+
+/* دخول الإدارة: خمس ضغطات على الشعار */
+let logoTaps = 0;
+let logoTimer = null;
+
+$("secretLogo").addEventListener("click",()=>{
+ logoTaps++;
+ clearTimeout(logoTimer);
+ logoTimer = setTimeout(()=>logoTaps=0,1800);
+
+ if(logoTaps >= 5){
+  logoTaps = 0;
+  askAdminPin();
+ }
+});
+
+async function askAdminPin(){
+ const pin = prompt("أدخلي الرقم السري للإدارة");
+ if(pin === null) return;
+ ADMIN_PIN = pin;
+
+ try{
+  const result = await adminPost({a:"list"});
+  ADMIN_DATA = result;
+  BOOKINGS = result.bookings || [];
+  BLOCKS = result.blocks || [];
+  CFG = result.cfg || CFG;
+  ADMIN_MODE = true;
+  $("customer").style.display = "none";
+  $("admin").style.display = "block";
+  renderAdmin();
+ }catch(e){
+  alert(e.message);
+ }
+}
+
+$("exitAdmin").onclick = ()=>{
+ ADMIN_MODE = false;
+ $("admin").style.display = "none";
+ $("customer").style.display = "block";
+};
+
+/* تبويبات الإدارة */
+document.querySelectorAll("[data-tab]").forEach(b=>{
+ b.onclick = ()=>{
+  document.querySelectorAll(".tab").forEach(x=>x.classList.remove("active"));
+  document.querySelectorAll("[data-tab]").forEach(x=>x.classList.add("ghost"));
+  $(b.dataset.tab).classList.add("active");
+  b.classList.remove("ghost");
+ };
+});
+
+function adminMessage(msg){
+ setStatus("adminStatus",msg);
+}
+
+async function adminRefresh(){
+ const d = await adminPost({a:"list"});
+ BOOKINGS = d.bookings || [];
+ BLOCKS = d.blocks || [];
+ CFG = d.cfg || CFG;
+ renderAdmin();
+}
+
+function renderAdmin(){
+ renderBookings();
+ renderAdminCategories();
+ renderAdminOffers();
+ fillContactForm();
+ fillAppearanceForm();
+ fillBlockCategories();
  renderBlocks();
- slots();
 }
 
-function loadData(){
- fetch(API+"?a=data")
- .then(function(r){return r.json()})
- .then(function(d){
-  if(!d||d.ok===false)throw new Error("تعذر تحميل البيانات");
+/* إدارة الحجوزات */
+function renderBookings(){
+ $("bookingsList").innerHTML = "";
 
-  B=d.booked||d.B||{};
+ if(!BOOKINGS.length){
+  $("bookingsList").innerHTML = '<p class="muted">لا توجد حجوزات حالياً.</p>';
+  return;
+ }
 
-  if(d.cfg){
-   C=Object.assign({},JSON.parse(JSON.stringify(DEF)),d.cfg);
-   if(!Array.isArray(C.sections))C.sections=DEF.sections;
+ BOOKINGS.slice().reverse().forEach(b=>{
+  const div = document.createElement("div");
+  div.className = "item-row";
+  div.innerHTML =
+   '<h4>'+esc(b.n)+'</h4>'+
+   '<div class="muted">الهاتف: '+esc(b.p)+'</div>'+
+   '<div class="muted">التاريخ: '+esc(b.d)+' — '+esc(b.t)+'</div>'+
+   '<div class="muted">الخدمات: '+esc(b.services)+'</div>'+
+   '<div class="muted">الإجمالي: '+esc(b.total)+'</div>'+
+   '<div class="muted">الحالة: '+esc(b.status)+'</div>'+
+   (b.status==="active"
+    ? '<button class="btn danger small cancelBooking">إلغاء الحجز</button>'
+    : '');
+  const btn = div.querySelector(".cancelBooking");
+  if(btn){
+   btn.onclick = async ()=>{
+    if(!confirm("هل تريدين إلغاء هذا الحجز؟")) return;
+    try{
+     await adminPost({a:"deleteBooking",id:b.id});
+     await adminRefresh();
+     adminMessage("تم إلغاء الحجز.");
+    }catch(e){adminMessage(e.message);}
+   };
   }
-
-  render();
- })
- .catch(function(e){
-  console.log(e);
-  render();
-  toast("تعذر الاتصال بالخادم، تحققي من اتصال الإنترنت");
+  $("bookingsList").appendChild(div);
  });
 }
 
-function submitBooking(){
- var n=$("customerName").value.trim();
- var p=$("customerPhone").value.trim();
- var d=getDate();
- var c=chosen();
+$("refreshBookings").onclick = async ()=>{
+ try{await adminRefresh();adminMessage("تم تحديث الحجوزات.");}
+ catch(e){adminMessage(e.message);}
+};
 
- if(!n){toast("اكتبي الاسم");return}
- if(!p){toast("اكتبي رقم الهاتف");return}
- if(!d){toast("اختاري تاريخ الحجز");return}
- if(!c.n.length){toast("اختاري خدمة واحدة على الأقل");return}
- if(!selectedSlot){toast("اختاري وقت الحجز");return}
+/* رفع الصور */
+async function uploadFile(file){
+ if(!file) return "";
+ const dataUrl = await new Promise((resolve,reject)=>{
+  const reader = new FileReader();
+  reader.onload = ()=>resolve(reader.result);
+  reader.onerror = reject;
+  reader.readAsDataURL(file);
+ });
 
- var btn=$("bookBtn");
- btn.disabled=true;
- btn.textContent="جاري إرسال الحجز...";
+ const result = await adminPost({
+  a:"upload",
+  image:dataUrl
+ });
+ return result.url;
+}
 
- var data={
-  a:"book",
-  date:d,
-  time:selectedSlot,
-  name:n,
-  phone:p,
-  svc:c.n.join("، "),
-  total:c.t,
-  totalText:c.t+" د.ل"
+/* إدارة الأقسام والخدمات */
+function renderAdminCategories(){
+ $("adminCategories").innerHTML = "";
+
+ CFG.sections.forEach((s,index)=>{
+  const div = document.createElement("div");
+  div.className = "item-row";
+  div.innerHTML =
+   '<h4>'+esc(s.t)+'</h4>'+
+   '<div class="muted">عدد الحجوزات المتزامنة: '+Number(s.capacity||1)+'</div>'+
+   '<div class="btnrow">'+
+   '<button class="btn small editCategory">تعديل القسم</button>'+
+   '<button class="btn small ghost addService">إضافة خدمة</button>'+
+   '<button class="btn small danger deleteCategory">حذف القسم</button>'+
+   '</div><div class="adminServiceList"></div>';
+
+  div.querySelector(".editCategory").onclick = ()=>editCategory(s.id);
+  div.querySelector(".addService").onclick = ()=>editService(s.id,null);
+  div.querySelector(".deleteCategory").onclick = async ()=>{
+   if(!confirm("حذف القسم وكل الخدمات التابعة له؟")) return;
+   CFG.sections = CFG.sections.filter(x=>x.id!==s.id);
+   await saveAllConfig();
+  };
+
+  const list = div.querySelector(".adminServiceList");
+  s.items.forEach(item=>{
+   const row = document.createElement("div");
+   row.className = "item-row";
+   row.innerHTML =
+    '<strong>'+esc(item.n)+'</strong>'+
+    '<div class="muted">'+esc(priceInfo(item))+'</div>'+
+    '<div class="btnrow">'+
+    '<button class="btn small editService">تعديل</button>'+
+    '<button class="btn small danger removeService">حذف</button>'+
+    '</div>';
+   row.querySelector(".editService").onclick = ()=>editService(s.id,item.id);
+   row.querySelector(".removeService").onclick = async ()=>{
+    if(!confirm("حذف هذه الخدمة؟")) return;
+    s.items = s.items.filter(x=>x.id!==item.id);
+    await saveAllConfig();
+   };
+   list.appendChild(row);
+  });
+
+  $("adminCategories").appendChild(div);
+ });
+}
+
+function editCategory(id){
+ const s = CFG.sections.find(x=>x.id===id);
+ if(!s) return;
+
+ const name = prompt("اسم القسم",s.t);
+ if(name===null) return;
+ const capacity = prompt("عدد الحجوزات المتزامنة لهذا القسم",s.capacity || 1);
+ if(capacity===null) return;
+
+ const imageChoice = confirm("هل تريدين تغيير صورة القسم؟");
+ const fileInput = document.createElement("input");
+ fileInput.type = "file";
+ fileInput.accept = "image/*";
+
+ const save = async file=>{
+  try{
+   s.t = name.trim() || s.t;
+   s.capacity = Math.max(1,Number(capacity)||1);
+   if(file) s.image = await uploadFile(file);
+   await saveAllConfig();
+  }catch(e){adminMessage(e.message);}
  };
 
- apiPost(data)
- .then(function(res){
-  if(res&&res.ok){
-   toast("تم إرسال طلب الحجز بنجاح");
-   $("customerName").value="";
-   $("customerPhone").value="";
-   document.querySelectorAll("#secs input").forEach(function(x){x.checked=false});
-   selectedSlot="";
-   updateChosen();
-   loadData();
-  }else{
-   toast((res&&res.message)||"لم يتم الحجز، قد يكون الموعد محجوزًا");
-   loadData();
-  }
- })
- .catch(function(e){
-  console.log(e);
-  toast("حدث خطأ في الاتصال. حاولي مرة أخرى");
- })
- .finally(function(){
-  btn.disabled=false;
-  btn.textContent="تأكيد الحجز";
- });
+ if(imageChoice){
+  fileInput.onchange = ()=>save(fileInput.files[0]);
+  fileInput.click();
+ }else{
+  save(null);
+ }
 }
 
-$("bookingDate").min=new Date().toISOString().slice(0,10);
-$("bookingDate").addEventListener("change",slots);
+function editService(categoryId,serviceId){
+ const section = CFG.sections.find(x=>x.id===categoryId);
+ if(!section) return;
 
-/* الإدارة */
+ const old = serviceId
+  ? section.items.find(x=>x.id===serviceId)
+  : null;
 
-function openLogin(){
- $("loginOverlay").style.display="flex";
- $("adminPin").value="";
-}
+ const name = prompt("اسم الخدمة",old ? old.n : "");
+ if(name===null) return;
 
-function closeLogin(){
- $("loginOverlay").style.display="none";
-}
+ const type = prompt(
+  "نوع السعر: fixed للسعر الثابت، range للسعر المتغير، consult للسعر بعد المعاينة",
+  old ? old.priceType : "fixed"
+ );
+ if(type===null) return;
 
-function closeAdmin(){
- $("adminOverlay").style.display="none";
-}
-
-function loginAdmin(){
- if($("adminPin").value!==PIN){
-  toast("الرقم السري غير صحيح");
+ if(!["fixed","range","consult"].includes(type)){
+  alert("نوع السعر غير صحيح.");
   return;
  }
 
- closeLogin();
- $("adminOverlay").style.display="flex";
- fillSettings();
- loadAppointments();
-}
+ let p = 0, minPrice = 0, maxPrice = 0;
 
-function showTab(tab,btn){
- adminTab=tab;
-
- ["appointments","settings","services","blocks"].forEach(function(t){
-  $("tab-"+t).style.display=t===tab?"block":"none";
- });
-
- document.querySelectorAll(".panel-actions .small-btn").forEach(function(b){
-  b.classList.remove("active");
- });
- if(btn)btn.classList.add("active");
-}
-
-function fillSettings(){
- $("setName").value=C.name||"";
- $("setTag").value=C.tag||"";
- $("setKick").value=C.kick||"";
- $("setHero").value=C.hero||"";
- $("setWa").value=C.wa||"";
- $("setAddress").value=C.addr||"";
- $("setHours").value=C.hours||"";
- $("setOpen").value=C.open||10;
- $("setClose").value=C.close||21;
- $("setBg").value=C.bgimg||"";
- $("setTheme").value=C.theme||"night";
- $("servicesJson").value=JSON.stringify(C.sections||[],null,2);
-}
-
-function saveSettings(){
- var next=Object.assign({},C,{
-  name:$("setName").value.trim(),
-  tag:$("setTag").value.trim(),
-  kick:$("setKick").value.trim(),
-  hero:$("setHero").value.trim(),
-  wa:$("setWa").value.trim(),
-  addr:$("setAddress").value.trim(),
-  hours:$("setHours").value.trim(),
-  open:Number($("setOpen").value),
-  close:Number($("setClose").value),
-  bgimg:$("setBg").value.trim(),
-  theme:$("setTheme").value
- });
-
- apiPost({a:"save",pin:PIN,cfg:next})
- .then(function(r){
-  if(r&&r.ok){
-   C=next;
-   render();
-   toast("تم حفظ الإعدادات");
-  }else{
-   toast((r&&r.message)||"تعذر حفظ الإعدادات");
-  }
- })
- .catch(function(){toast("حدث خطأ أثناء الحفظ")});
-}
-
-function saveServices(){
- var arr;
- try{
-  arr=JSON.parse($("servicesJson").value);
-  if(!Array.isArray(arr))throw new Error();
-  arr.forEach(function(s){
-   if(!s.t||!Array.isArray(s.items))throw new Error();
-  });
- }catch(e){
-  toast("تأكدي من صيغة الخدمات");
-  return;
+ if(type==="fixed"){
+  const value = prompt("السعر الثابت",old ? old.p : "0");
+  if(value===null) return;
+  p = Number(value)||0;
  }
 
- var next=Object.assign({},C,{sections:arr});
-
- apiPost({a:"save",pin:PIN,cfg:next})
- .then(function(r){
-  if(r&&r.ok){
-   C=next;
-   render();
-   toast("تم حفظ الخدمات والأسعار");
-  }else{
-   toast((r&&r.message)||"تعذر حفظ الخدمات");
-  }
- })
- .catch(function(){toast("حدث خطأ أثناء الحفظ")});
-}
-
-function loadAppointments(){
- $("appointmentList").innerHTML='<p class="empty">جاري تحميل الحجوزات...</p>';
-
- apiPost({a:"list",pin:PIN})
- .then(function(r){
-  if(r&&r.ok===false){
-   $("appointmentList").textContent=r.message||"تعذر تحميل الحجوزات";
+ if(type==="range"){
+  const min = prompt("أقل سعر",old ? old.minPrice : "0");
+  if(min===null) return;
+  const max = prompt("أعلى سعر",old ? old.maxPrice : "0");
+  if(max===null) return;
+  minPrice = Number(min)||0;
+  maxPrice = Number(max)||0;
+  if(maxPrice < minPrice){
+   alert("أعلى سعر يجب أن يكون أكبر من أو يساوي أقل سعر.");
    return;
   }
+ }
 
-  ROWS=Array.isArray(r)?r:(r.rows||r.bookings||[]);
-  renderAppointments();
- })
- .catch(function(){
-  $("appointmentList").innerHTML='<p class="empty">تعذر تحميل الحجوزات</p>';
+ const desc = prompt(
+  "وصف الخدمة أو ملاحظات السعر",
+  old ? old.desc : (type==="range"
+   ? "تختلف الأسعار حسب نوعية الشعر وكثافته وطوله، ويتم تحديد السعر النهائي بعد معاينة الشعر."
+   : "")
+ );
+ if(desc===null) return;
+
+ const imageChoice = confirm("هل تريدين اختيار صورة للخدمة؟");
+ const fileInput = document.createElement("input");
+ fileInput.type = "file";
+ fileInput.accept = "image/*";
+
+ const save = async file=>{
+  try{
+   const item = old || {id:makeId("service")};
+   item.n = name.trim();
+   item.priceType = type;
+   item.p = p;
+   item.minPrice = minPrice;
+   item.maxPrice = maxPrice;
+   item.desc = desc;
+   if(file) item.i = await uploadFile(file);
+   if(!old) section.items.push(item);
+   await saveAllConfig();
+  }catch(e){adminMessage(e.message);}
+ };
+
+ if(imageChoice){
+  fileInput.onchange = ()=>save(fileInput.files[0]);
+  fileInput.click();
+ }else{
+  save(null);
+ }
+}
+
+$("addCategory").onclick = async ()=>{
+ const name = $("newCategoryName").value.trim();
+ if(!name){adminMessage("اكتبي اسم القسم.");return;}
+
+ try{
+  const file = $("newCategoryImage").files[0];
+  const image = file ? await uploadFile(file) : "";
+  CFG.sections.push({
+   id:makeId("category"),
+   t:name,
+   image:image,
+   capacity:Math.max(1,Number($("newCategoryCapacity").value)||1),
+   items:[]
+  });
+  $("newCategoryName").value = "";
+  $("newCategoryImage").value = "";
+  await saveAllConfig();
+ }catch(e){adminMessage(e.message);}
+};
+
+/* إدارة العروض */
+function renderAdminOffers(){
+ $("adminOffers").innerHTML = "";
+ (CFG.offers || []).forEach(o=>{
+  const div = document.createElement("div");
+  div.className = "item-row";
+  div.innerHTML =
+   '<h4>'+esc(o.title)+'</h4>'+
+   '<div class="muted">'+esc(o.desc || "")+'</div>'+
+   '<div class="muted">'+money(o.oldPrice)+' ← '+money(o.newPrice)+'</div>'+
+   '<div class="muted">من '+esc(o.start||"")+' إلى '+esc(o.end||"")+'</div>'+
+   '<div class="btnrow">'+
+   '<button class="btn small toggleOffer">'+(o.active===false?"تفعيل":"إيقاف")+'</button>'+
+   '<button class="btn small danger deleteOffer">حذف</button>'+
+   '</div>';
+
+  div.querySelector(".toggleOffer").onclick = async ()=>{
+   o.active = o.active===false;
+   await saveAllConfig();
+  };
+  div.querySelector(".deleteOffer").onclick = async ()=>{
+   if(!confirm("حذف العرض؟")) return;
+   CFG.offers = CFG.offers.filter(x=>x.id!==o.id);
+   await saveAllConfig();
+  };
+  $("adminOffers").appendChild(div);
  });
 }
 
-function renderAppointments(){
- var L=$("appointmentList");
- L.innerHTML="";
+$("addOffer").onclick = async ()=>{
+ const title = $("offerTitle").value.trim();
+ if(!title){adminMessage("اكتبي عنوان العرض.");return;}
 
- if(!ROWS.length){
-  L.innerHTML='<p class="empty">لا توجد حجوزات حاليًا</p>';
+ try{
+  const file = $("offerImage").files[0];
+  const image = file ? await uploadFile(file) : "";
+  CFG.offers.push({
+   id:makeId("offer"),
+   title:title,
+   desc:$("offerDesc").value,
+   oldPrice:Number($("offerOld").value)||0,
+   newPrice:Number($("offerNew").value)||0,
+   image:image,
+   start:$("offerStart").value,
+   end:$("offerEnd").value,
+   active:true
+  });
+  $("offerTitle").value = "";
+  $("offerDesc").value = "";
+  $("offerOld").value = "";
+  $("offerNew").value = "";
+  $("offerImage").value = "";
+  $("offerStart").value = "";
+  $("offerEnd").value = "";
+  await saveAllConfig();
+ }catch(e){adminMessage(e.message);}
+};
+
+/* المظهر */
+function fillAppearanceForm(){
+ const c = CFG.colors || {};
+ $("colorPink").value = c.pink || "#d88cae";
+ $("colorGold").value = c.gold || "#c8a45d";
+ $("colorBg").value = c.background || "#17131a";
+ $("colorCard").value = c.card || "#241d27";
+ $("colorText").value = c.text || "#fff8f5";
+}
+
+$("saveAppearance").onclick = async ()=>{
+ try{
+  CFG.colors = {
+   pink:$("colorPink").value,
+   gold:$("colorGold").value,
+   background:$("colorBg").value,
+   card:$("colorCard").value,
+   text:$("colorText").value
+  };
+
+  const file = $("backgroundImage").files[0];
+  if(file) CFG.bgimg = await uploadFile(file);
+  await saveAllConfig();
+ }catch(e){adminMessage(e.message);}
+};
+
+/* معلومات المركز */
+function fillContactForm(){
+ $("editName").value = CFG.name || "";
+ $("editOwner").value = CFG.tag || "";
+ $("editTag").value = CFG.kick || "";
+ $("editHero").value = CFG.hero || "";
+ $("editWa").value = CFG.wa || "";
+ $("editAddress").value = CFG.addr || "";
+ $("editHours").value = CFG.hours || "";
+ $("editOpen").value = CFG.open || 10;
+ $("editClose").value = CFG.close || 21;
+}
+
+$("saveContact").onclick = async ()=>{
+ CFG.name = $("editName").value.trim();
+ CFG.tag = $("editOwner").value.trim();
+ CFG.kick = $("editTag").value.trim();
+ CFG.hero = $("editHero").value.trim();
+ CFG.wa = $("editWa").value.trim();
+ CFG.addr = $("editAddress").value.trim();
+ CFG.hours = $("editHours").value.trim();
+ CFG.open = Number($("editOpen").value);
+ CFG.close = Number($("editClose").value);
+ await saveAllConfig();
+};
+
+/* حظر المواعيد */
+function fillBlockCategories(){
+ $("blockTime").innerHTML = timeList().map(t=>
+  '<option value="'+t+'">'+t+'</option>'
+ ).join("");
+
+ $("blockCategory").innerHTML =
+  '<option value="*">كل الأقسام</option>' +
+  CFG.sections.map(s=>
+   '<option value="'+esc(s.id)+'">'+esc(s.t)+'</option>'
+  ).join("");
+}
+
+$("addBlock").onclick = async ()=>{
+ try{
+  await adminPost({
+   a:"block",
+   date:$("blockDate").value,
+   time:$("blockTime").value,
+   categoryKey:$("blockCategory").value
+  });
+  await adminRefresh();
+  adminMessage("تم حظر الموعد.");
+ }catch(e){adminMessage(e.message);}
+};
+
+function renderBlocks(){
+ $("blocksList").innerHTML = "";
+ if(!BLOCKS.length){
+  $("blocksList").innerHTML = '<p class="muted">لا توجد مواعيد محظورة.</p>';
   return;
  }
 
- ROWS.slice().reverse().forEach(function(r){
-  var div=document.createElement("div");
-  div.className="admin-row";
-
-  var name=r.n||r.name||"";
-  var phone=r.p||r.phone||"";
-  var date=r.d||r.date||"";
-  var time=r.t||r.time||"";
-  var services=r.svc||r.s||r.services||"";
-  var total=r.totalText||r.total||"";
-
-  div.innerHTML=
-   "<strong style='color:var(--gold)'>"+escapeHtml(name)+"</strong><br>"+
-   "الهاتف: "+escapeHtml(phone)+"<br>"+
-   "التاريخ: "+escapeHtml(date)+" — "+escapeHtml(time)+"<br>"+
-   "الخدمات: "+escapeHtml(services)+"<br>"+
-   "الإجمالي: "+escapeHtml(total);
-
-  L.appendChild(div);
+ BLOCKS.forEach(b=>{
+  const div = document.createElement("div");
+  div.className = "item-row";
+  const cat = b.categoryKey==="*"
+   ? "كل الأقسام"
+   : ((CFG.sections.find(s=>s.id===b.categoryKey)||{}).t || "قسم");
+  div.innerHTML =
+   '<strong>'+esc(b.date)+' — '+esc(b.time)+'</strong>'+
+   '<div class="muted">'+esc(cat)+'</div>'+
+   '<button class="btn small ghost">فتح الموعد</button>';
+  div.querySelector("button").onclick = async ()=>{
+   try{
+    await adminPost({a:"unblock",id:b.id});
+    await adminRefresh();
+    adminMessage("تم فتح الموعد.");
+   }catch(e){adminMessage(e.message);}
+  };
+  $("blocksList").appendChild(div);
  });
 }
 
-function changeBlock(action){
- var d=$("blockDate").value;
- var t=$("blockTime").value;
-
- if(!d||!t){
-  toast("اختاري التاريخ والوقت");
-  return;
+/* حفظ الإعدادات */
+async function saveAllConfig(){
+ try{
+  await adminPost({a:"save",cfg:CFG});
+  renderSite();
+  renderCategories();
+  renderOffers();
+  renderAdminCategories();
+  renderAdminOffers();
+  fillBlockCategories();
+  adminMessage("تم حفظ التغييرات بنجاح.");
+ }catch(e){
+  adminMessage(e.message);
  }
-
- apiPost({a:action,pin:PIN,date:d,time:t})
- .then(function(r){
-  if(r&&r.ok){
-   toast(action==="block"?"تم حظر الموعد":"تم إلغاء الحظر");
-   loadData();
-  }else{
-   toast((r&&r.message)||"تعذر تنفيذ العملية");
-  }
- })
- .catch(function(){toast("حدث خطأ في الاتصال")});
 }
 
-/* تشغيل الموقع */
-render();
-loadData();
+init();
 </script>
-
 </body>
 </html>
