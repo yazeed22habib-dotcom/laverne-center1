@@ -164,9 +164,24 @@ function secs(){var L=$('secs');L.innerHTML='';C.sections.forEach(function(s,si)
  var w=hr('div',{},[hr('h2',{t:s.t})]);
  s.items.forEach(function(it,ii){var k=si+'.'+ii,kids=[];
   if(it.i){var th=hr('div',{class:'th'});th.style.backgroundImage='url('+it.i+')';kids.push(th)}
-  var b=hr('button',{type:'button',class:'add','aria-pressed':!!sel[k],t:sel[k]?'تمت الإضافة':'أضيفي للحجز'});
-  b.onclick=function(){if(sel[k])delete sel[k];else sel[k]=1;secs();sum()};
-  kids.push(hr('div',{class:'mid'},[hr('h3',{t:it.n}),hr('small',{t:it.d||''}),hr('div',{},[b])]));
+  
+function slots(){
+ var d=$('date').value,now=new Date(),L=$('slots');
+ L.innerHTML='';
+ for(var h=C.open;h<C.close;h++){
+  var t=pad(h)+':00',b=hr('button',{type:'button',class:'slot',t:lbl(h)});
+  if((B[d]||[]).indexOf(t)>=0){
+   b.textContent+=' (محجوز)';
+   b.disabled=true;
+  }else if(d===iso(now)&&h<=now.getHours()){
+   b.disabled=true;
+  }
+  b.setAttribute('aria-pressed',slot===t);
+  b.onclick=(function(t){return function(){slot=t;slots()}})(t);
+  L.appendChild(b);
+ }
+}
+
   kids.push(hr('div',{class:'price',t:priceText(it)}));
   w.appendChild(hr('div',{class:'svc'},kids))});
  L.appendChild(w)})}
@@ -392,7 +407,9 @@ function aS(){
 
  P.appendChild(as);
 }
-
+function aT(){
+ var P=$('p1');
+ P.innerHTML='';
  var sl=hr('select');Object.keys(TN).forEach(function(k){var o=hr('option',{value:k,t:TN[k]});if(k===C.theme)o.selected=true;sl.appendChild(o)});
  sl.onchange=function(){C.theme=sl.value;theme()};
  var f=hr('input',{type:'file',accept:'image/*'});f.onchange=function(){if(f.files[0])up(f.files[0],function(u){C.bgimg=u;theme()})};
@@ -430,7 +447,8 @@ function aM2(){var Lw=$('bl');if(!Lw)return;Lw.innerHTML='';
  hr('span',{t:r.d+' · '+r.t+' · '+r.n+(r.totalText?' · '+r.totalText:(r.p?' · '+r.p+' د.ل':''))+(r.s?' · '+r.s:'')}),
  c
 ]))
-
+ })
+}
 render();
 if(API){fetch(API+'?a=data').then(function(r){return r.json()}).then(function(d){if(d.cfg&&d.cfg.sections)C=Object.assign({},DEF,d.cfg);B=d.booked||{};render()}).catch(function(){})}
 if(location.hash==='#admin')openPin();
