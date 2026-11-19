@@ -1,728 +1,717 @@
 
-## الملف: package.json
-
-````json
-{
-  "name": "laverne-center",
-  "version": "1.0.0",
-  "private": true,
-  "main": "server.js",
-  "scripts": { "start": "node server.js" },
-  "engines": { "node": ">=18" },
-  "dependencies": {
-    "better-sqlite3": "^11.5.0",
-    "express": "^4.21.0",
-    "multer": "^1.4.5-lts.1"
-  }
-}
-
-````
-
-## الملف: .gitignore
-
-````
-node_modules
-data
-.env
-
-````
-
-## الملف: .env.example
-
-````
-PORT=3000
-# مجلد البيانات الدائم (قاعدة البيانات + الصور المرفوعة). على الاستضافة اربطه بقرص دائم
-DATA_DIR=./data
-# الرقم السري الافتراضي لأول تشغيل فقط (بعدها يتغير من لوحة الإدارة)
-ADMIN_PASSWORD=1234
-TZ_NAME=Africa/Tripoli
-
-````
-
-## الملف: README.md
-
-````md
-# مركز لاڤيرن – LAVERNE CENTER
-
-موقع حجز كامل: واجهة زبائن + لوحة إدارة مخفية + قاعدة بيانات دائمة (SQLite) + رفع صور.
-
-## التشغيل محلياً
-```bash
-npm install
-cp .env.example .env   # اختياري
-npm start              # ثم افتحي http://localhost:3000
-```
-
-## الدخول للإدارة
-اضغطي على الشعار 5 مرات متتالية ← أدخلي الرقم السري (الافتراضي 1234) ← تفتح لوحة الإدارة.
-غيّري الرقم السري فوراً من: معلومات المركز.
-
-## الرفع على GitHub
-```bash
-git init && git add . && git commit -m "Laverne Center"
-git branch -M main
-git remote add origin <رابط المستودع>
-git push -u origin main
-```
-
-## النشر (مهم للحفاظ على البيانات)
-المشروع يحفظ قاعدة البيانات والصور في مجلد `DATA_DIR`. على أي استضافة يجب ربط هذا المجلد بقرص دائم (Volume/Disk)،
-وإلا ستضيع البيانات عند إعادة التشغيل. مثال: Railway (Volume على /data) أو Render (Disk) ثم اضبطي `DATA_DIR=/data`.
-لا تعملي نشراً على استضافة بلا تخزين دائم (مثل Vercel) لأن SQLite لن تحفظ هناك.
-
-## ملاحظات
-- الأسعار المذكورة فقط هي المعبّأة؛ باقي الخدمات "بعد المعاينة" والمديرة تحدد أسعارها.
-- البيانات الأولية تُضاف فقط عند أول تشغيل على قاعدة فارغة، ولا تُستبدل أي بيانات موجودة لاحقاً.
-- بوسترات الأقسام ترفع من لوحة الإدارة ← الأقسام والخدمات ← تعديل القسم.
-- المنطقة الزمنية الافتراضية Africa/Tripoli (قابلة للتغيير بـ TZ_NAME).
-
-````
-
-## الملف: db.js
-
-````js
-const Database = require('better-sqlite3');
-const fs = require('fs');
-const path = require('path');
-const crypto = require('crypto');
-const DATA = process.env.DATA_DIR || path.join(__dirname, 'data');
-fs.mkdirSync(path.join(DATA, 'uploads'), { recursive: true });
-const db = new Database(path.join(DATA, 'laverne.db'));
-db.pragma('journal_mode = WAL');
-db.pragma('foreign_keys = ON');
-
-db.exec(`
-CREATE TABLE IF NOT EXISTS settings(key TEXT PRIMARY KEY, value TEXT);
-CREATE TABLE IF NOT EXISTS categories(
-  id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, poster TEXT DEFAULT '',
-  sort INTEGER DEFAULT 0, capacity INTEGER DEFAULT 1, active INTEGER DEFAULT 1);
-CREATE TABLE IF NOT EXISTS services(
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  category_id INTEGER NOT NULL REFERENCES categories(id) ON DELETE CASCADE,
-  name TEXT NOT NULL, description TEXT DEFAULT '', includes TEXT DEFAULT '', image TEXT DEFAULT '',
-  price_type TEXT DEFAULT 'inspection', price REAL, price_min REAL, price_max REAL,
-  active INTEGER DEFAULT 1, sort INTEGER DEFAULT 0);
-CREATE TABLE IF NOT EXISTS offers(
-  id INTEGER PRIMARY KEY AUTOINCREMENT, title TEXT NOT NULL, description TEXT DEFAULT '', image TEXT DEFAULT '',
-  old_price REAL, new_price REAL, start_date TEXT DEFAULT '', end_date TEXT DEFAULT '', active INTEGER DEFAULT 1);
-CREATE TABLE IF NOT EXISTS bookings(
-  id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, phone TEXT, date TEXT, time TEXT,
-  status TEXT DEFAULT 'active', services TEXT, categories TEXT,
-  total_fixed REAL DEFAULT 0, total_min REAL DEFAULT 0, total_max REAL DEFAULT 0, inspection TEXT DEFAULT '[]',
-  created_at TEXT DEFAULT CURRENT_TIMESTAMP);
-CREATE INDEX IF NOT EXISTS idx_b ON bookings(date, status);
-CREATE TABLE IF NOT EXISTS closures(
-  id INTEGER PRIMARY KEY AUTOINCREMENT, date TEXT NOT NULL, start_time TEXT DEFAULT '', end_time TEXT DEFAULT '',
-  category_id INTEGER, note TEXT DEFAULT '');
-`);
-
-// إعدادات افتراضية: تُضاف فقط إذا لم تكن موجودة، ولا تُستبدل أبداً
-const defaults = {
-  name_ar: 'مركز لاڤيرن', name_en: 'LAVERNE CENTER', owner: '', address: '', hours: '',
-  whatsapp: '218912744233', phones: JSON.stringify(['218912744233']), website: '',
-  open_time: '10:00', close_time: '21:00', slot_minutes: '30',
-  color_primary: '#d9769b', color_gold: '#c9a24b', color_bg: '#fff1f5', bg_image: '', logo: '',
-  hero_text: 'جمالكِ يبدأ هنا',
-  admin_password: process.env.ADMIN_PASSWORD || '1234',
-  secret: crypto.randomBytes(32).toString('hex'),
-};
-const ins = db.prepare('INSERT OR IGNORE INTO settings(key,value) VALUES(?,?)');
-for (const [k, v] of Object.entries(defaults)) ins.run(k, v);
-
-// بيانات أولية: تُضاف فقط إذا كان جدول الأقسام فارغاً تماماً
-if (db.prepare('SELECT COUNT(*) n FROM categories').get().n === 0) {
-  // [اسم الخدمة, المكونات (بفاصلة)، السعر] - السعر null = بعد المعاينة (لا نخترع أسعاراً)
-  const seed = [
-    ['الشعر', [
-      ['غسل وتصفيف الشعر', 'غسل الشعر بالشامبو والبلسم،تجفيف الشعر،السيشوار والتصفيف النهائي', null],
-      ['الاستشوار', 'تجهيز الشعر،تجفيفه،تصفيفه بالفرشاة والسيشوار،اللمسات النهائية', null],
-      ['تسريحات الشعر', 'تمويج أو فرد،رفع الشعر،تثبيت التسريحة،إضافة الإكسسوارات حسب الاختيار', null],
-      ['صبغة كاملة', 'استشارة اللون،تجهيز الشعر،تطبيق الصبغة،غسل الشعر والعناية بعد الصبغة', 150],
-      ['الهايلايت', 'تحديد الخصل،تطبيق اللون،الغسل والتونر عند الحاجة', null],
-      ['علاج بالكيراتين', 'تقييم الشعر،تنظيفه،تطبيق المنتج،المعالجة والتصفيف', 250],
-      ['قص وتصفيف', 'تحديد الطول،قص الشعر،ترتيب الأطراف،التصفيف', 40],
-    ]],
-    ['المكياج', [
-      ['المكياج الناعم', 'تجهيز البشرة،كريم الأساس،الكونسيلر،البلاشر،ظلال العيون الخفيفة،الماسكارا،أحمر الشفاه', null],
-      ['مكياج سهرة', 'تجهيز البشرة،كريم الأساس،الكونتور،ظلال العيون،الآيلاينر،الرموش،تحديد الشفاه،التثبيت', 150],
-      ['مكياج وتسريحة عروس', 'تجهيز متكامل للبشرة،مكياج احترافي،رموش،تثبيت،اللمسات النهائية الخاصة بالعروس', 700],
-      ['مكياج المناسبات', 'اختيار الإطلالة،تجهيز البشرة،مكياج متكامل يناسب المناسبة', null],
-    ]],
-    ['البشرة', [
-      ['تنظيف بشرة عميق', 'تنظيف أولي،تقشير مناسب،تنظيف المسام،قناع،ترطيب', 90],
-      ['جلسة ترطيب', 'تنظيف،سيروم ترطيب،ماسك،ترطيب نهائي', 70],
-      ['عناية ونضارة البشرة', 'تنظيف لطيف،ماسك مناسب،سيروم،عناية نهائية', null],
-      ['تجهيز البشرة للمناسبات', 'تنظيف،ترطيب،تجهيز البشرة للمكياج', null],
-    ]],
-    ['الحمام البخاري والمغربي', [
-      ['الحمام البخاري', 'جلسة بخار،تهيئة البشرة،تنظيف الجسم،الشطف،الترطيب', null],
-      ['الحمام المغربي', 'بخار،صابون مغربي أسود،تقشير بالكيس المغربي،شطف،طين أو غاسول،ترطيب', null],
-      ['حمام العناية بالجسم', 'تنظيف،تقشير لطيف،ماسك للجسم،ترطيب', null],
-      ['حمام العروس', 'حمام مغربي،تقشير،عناية بالجسم،ترطيب،تجهيز للمناسبة', null],
-    ]],
-    ['الأظافر', [
-      ['مانيكير', 'تنظيف الأظافر،ترتيب الشكل،تنظيف الجلد المحيط،ترطيب اليدين', 35],
-      ['باديكير', 'نقع القدمين،تنظيف وترتيب الأظافر،العناية بالكعب،ترطيب القدمين', 45],
-      ['طلاء الأظافر', 'تجهيز الظفر،طبقة أساس،اللون،طبقة حماية', null],
-      ['عناية الأظافر', 'تقوية،ترطيب،ترتيب الأظافر', null],
-    ]],
-  ];
-  const ic = db.prepare('INSERT INTO categories(name,sort) VALUES(?,?)');
-  const is = db.prepare('INSERT INTO services(category_id,name,includes,price_type,price,sort) VALUES(?,?,?,?,?,?)');
-  db.transaction(() => {
-    seed.forEach(([cat, list], i) => {
-      const cid = ic.run(cat, i).lastInsertRowid;
-      list.forEach(([n, inc, p], j) =>
-        is.run(cid, n, inc.split('،').join('\n'), p == null ? 'inspection' : 'fixed', p, j));
-    });
-  })();
-}
-module.exports = { db, DATA };
-
-````
-
-## الملف: server.js
-
-````js
-const express = require('express'), multer = require('multer'), crypto = require('crypto'), path = require('path');
-const { db, DATA } = require('./db');
-const app = express();
-app.set('trust proxy', 1);
-app.use(express.json({ limit: '1mb' }));
-app.use('/uploads', express.static(path.join(DATA, 'uploads'), { maxAge: '7d' }));
-app.use(express.static(path.join(__dirname, 'public')));
-
-const TZ = process.env.TZ_NAME || 'Africa/Tripoli';
-const nowLocal = () => {
-  const p = new Intl.DateTimeFormat('en-CA', { timeZone: TZ, year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' })
-    .formatToParts(new Date()).reduce((a, x) => (a[x.type] = x.value, a), {});
-  return { date: `${p.year}-${p.month}-${p.day}`, time: `${p.hour}:${p.minute}` };
-};
-const getAll = () => Object.fromEntries(db.prepare('SELECT key,value FROM settings').all().map(r => [r.key, r.value]));
-const pub = () => {
-  const s = getAll(); delete s.admin_password; delete s.secret;
-  try { s.phones = JSON.parse(s.phones || '[]'); } catch { s.phones = []; }
-  return s;
-};
-
-// ---------- المصادقة ----------
-const sign = e => crypto.createHmac('sha256', getAll().secret).update(String(e)).digest('hex');
-const mkToken = () => { const e = Date.now() + 12 * 3600e3; return e + '.' + sign(e); };
-function adm(q, r, n) {
-  const [e, s] = (q.headers.authorization || '').replace('Bearer ', '').split('.');
-  if (e && s && +e > Date.now() && s.length === 64 && crypto.timingSafeEqual(Buffer.from(s), Buffer.from(sign(e)))) return n();
-  r.status(401).json({ error: 'unauthorized' });
-}
-const fails = {};
-app.post('/api/admin/login', (q, r) => {
-  const f = fails[q.ip] || { n: 0, t: Date.now() };
-  if (Date.now() - f.t > 600000) { f.n = 0; f.t = Date.now(); }
-  if (f.n >= 10) return r.status(429).json({ error: 'محاولات كثيرة، حاول لاحقاً' });
-  if (String(q.body.password || '') !== getAll().admin_password) { f.n++; fails[q.ip] = f; return r.status(401).json({ error: 'الرقم السري غير صحيح' }); }
-  delete fails[q.ip];
-  r.json({ token: mkToken() });
-});
-
-// ---------- الأوقات ----------
-const toM = t => { const [a, b] = t.split(':'); return +a * 60 + +b; };
-const fmt = m => String(Math.floor(m / 60)).padStart(2, '0') + ':' + String(m % 60).padStart(2, '0');
-function slotsFor(date, catIds) {
-  if (!catIds.length) return [];
-  const s = getAll(), step = Math.max(10, +s.slot_minutes || 30);
-  const cats = db.prepare(`SELECT id,capacity FROM categories WHERE id IN (${catIds.map(() => '?').join(',')})`).all(...catIds);
-  const closures = db.prepare('SELECT * FROM closures WHERE date=?').all(date);
-  const bk = db.prepare("SELECT time,categories FROM bookings WHERE date=? AND status='active'").all(date)
-    .map(b => ({ time: b.time, cats: JSON.parse(b.categories) }));
-  const now = nowLocal(), out = [];
-  for (let m = toM(s.open_time); m < toM(s.close_time); m += step) {
-    const t = fmt(m); let ok = true;
-    if (date < now.date || (date === now.date && t <= now.time)) ok = false;
-    for (const c of closures) {
-      if (c.category_id && !catIds.includes(c.category_id)) continue;
-      if (!c.start_time || (t >= c.start_time && t < (c.end_time || '24:00'))) ok = false;
-    }
-    if (ok) for (const c of cats) {
-      if (bk.filter(b => b.time === t && b.cats.includes(c.id)).length >= c.capacity) { ok = false; break; }
-    }
-    out.push({ time: t, available: ok });
-  }
-  return out;
-}
-const parseCats = v => String(v || '').split(',').map(Number).filter(Boolean);
-
-// ---------- واجهة الزبائن ----------
-app.get('/api/data', (q, r) => {
-  const t = nowLocal().date;
-  r.json({
-    settings: pub(),
-    categories: db.prepare('SELECT * FROM categories WHERE active=1 ORDER BY sort,id').all(),
-    services: db.prepare('SELECT * FROM services WHERE active=1 ORDER BY sort,id').all(),
-    offers: db.prepare("SELECT * FROM offers WHERE active=1 AND (start_date='' OR start_date IS NULL OR start_date<=?) AND (end_date='' OR end_date IS NULL OR end_date>=?) ORDER BY id DESC").all(t, t),
-  });
-});
-app.get('/api/slots', (q, r) => {
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(q.query.date || '')) return r.json([]);
-  r.json(slotsFor(q.query.date, parseCats(q.query.cats)));
-});
-
-function summarize(list) {
-  let fixed = 0, min = 0, max = 0; const insp = [];
-  for (const s of list) {
-    if (s.price_type === 'fixed') fixed += s.price || 0;
-    else if (s.price_type === 'variable') { min += s.price_min || 0; max += s.price_max || 0; }
-    else insp.push(s.name);
-  }
-  return { fixed, min, max, insp };
-}
-const priceStr = s => s.price_type === 'fixed' ? `${s.price} د.ل` : s.price_type === 'variable' ? `${s.price_min}-${s.price_max} د.ل (تقديري)` : 'يحدد بعد المعاينة';
-
-app.post('/api/bookings', (q, r) => {
-  const { name, phone, date, time } = q.body;
-  const ids = [...new Set((q.body.serviceIds || []).map(Number).filter(Boolean))];
-  if (!name || String(name).trim().length < 2) return r.status(400).json({ error: 'الرجاء إدخال الاسم' });
-  if (!/^[+\d\s-]{7,20}$/.test(phone || '')) return r.status(400).json({ error: 'رقم الهاتف غير صحيح' });
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(date || '') || !/^\d{2}:\d{2}$/.test(time || '')) return r.status(400).json({ error: 'اختاري التاريخ والوقت' });
-  if (!ids.length) return r.status(400).json({ error: 'اختاري خدمة واحدة على الأقل' });
-  try {
-    const result = db.transaction(() => {
-      const list = db.prepare(`SELECT s.*, c.name AS cat_name FROM services s JOIN categories c ON c.id=s.category_id
-        WHERE s.active=1 AND c.active=1 AND s.id IN (${ids.map(() => '?').join(',')})`).all(...ids);
-      if (list.length !== ids.length) throw new Error('إحدى الخدمات المختارة لم تعد متاحة');
-      const cats = [...new Set(list.map(s => s.category_id))];
-      const slot = slotsFor(date, cats).find(x => x.time === time);
-      if (!slot || !slot.available) { const e = new Error('هذا الوقت لم يعد متاحاً، اختاري وقتاً آخر'); e.code = 409; throw e; }
-      const sm = summarize(list);
-      const snap = list.map(s => ({ id: s.id, name: s.name, category: s.cat_name, price_type: s.price_type, price: s.price, price_min: s.price_min, price_max: s.price_max }));
-      const id = db.prepare('INSERT INTO bookings(name,phone,date,time,services,categories,total_fixed,total_min,total_max,inspection) VALUES(?,?,?,?,?,?,?,?,?,?)')
-        .run(String(name).trim(), String(phone).trim(), date, time, JSON.stringify(snap), JSON.stringify(cats), sm.fixed, sm.min, sm.max, JSON.stringify(sm.insp)).lastInsertRowid;
-      return { id, snap, sm };
-    })();
-    const s = getAll(), { snap, sm } = result;
-    let msg = `حجز جديد - ${s.name_ar}\nالاسم: ${String(name).trim()}\nالهاتف: ${String(phone).trim()}\n\nالخدمات:\n` +
-      snap.map(x => `- ${x.name} (${priceStr(x)})`).join('\n') + `\n\nالإجمالي الثابت: ${sm.fixed} د.ل`;
-    if (sm.min || sm.max) msg += `\nالتقديري: ${sm.min} - ${sm.max} د.ل`;
-    if (sm.insp.length) msg += `\nتحتاج معاينة: ${sm.insp.join('، ')}`;
-    msg += `\n\nالتاريخ: ${date}\nالوقت: ${time}\nرقم الحجز: ${result.id}`;
-    r.json({ id: result.id, services: snap, summary: sm, whatsapp_url: `https://wa.me/${String(s.whatsapp).replace(/\D/g, '')}?text=${encodeURIComponent(msg)}` });
-  } catch (e) {
-    r.status(e.code || 400).json({ error: e.message });
-  }
-});
-
-// ---------- الإدارة ----------
-const norm = v => v === true ? 1 : v === false ? 0 : v;
-function crud(table, fields, order) {
-  const base = `/api/admin/${table}`;
-  app.get(base, adm, (q, r) => r.json(db.prepare(`SELECT * FROM ${table} ORDER BY ${order}`).all()));
-  app.post(base, adm, (q, r) => {
-    const f = fields.filter(k => k in q.body);
-    const info = db.prepare(`INSERT INTO ${table}(${f.join(',')}) VALUES(${f.map(() => '?').join(',')})`).run(...f.map(k => norm(q.body[k])));
-    r.json({ id: info.lastInsertRowid });
-  });
-  app.put(base + '/:id', adm, (q, r) => {
-    const f = fields.filter(k => k in q.body);
-    if (f.length) db.prepare(`UPDATE ${table} SET ${f.map(k => k + '=?').join(',')} WHERE id=?`).run(...f.map(k => norm(q.body[k])), q.params.id);
-    r.json({ ok: 1 });
-  });
-  app.delete(base + '/:id', adm, (q, r) => { db.prepare(`DELETE FROM ${table} WHERE id=?`).run(q.params.id); r.json({ ok: 1 }); });
-}
-crud('categories', ['name', 'poster', 'sort', 'capacity', 'active'], 'sort,id');
-crud('services', ['category_id', 'name', 'description', 'includes', 'image', 'price_type', 'price', 'price_min', 'price_max', 'active', 'sort'], 'category_id,sort,id');
-crud('offers', ['title', 'description', 'image', 'old_price', 'new_price', 'start_date', 'end_date', 'active'], 'id DESC');
-crud('closures', ['date', 'start_time', 'end_time', 'category_id', 'note'], 'date');
-
-const KEYS = ['name_ar', 'name_en', 'owner', 'address', 'hours', 'whatsapp', 'phones', 'website', 'open_time', 'close_time', 'slot_minutes',
-  'color_primary', 'color_gold', 'color_bg', 'bg_image', 'logo', 'hero_text', 'admin_password'];
-app.get('/api/admin/settings', adm, (q, r) => r.json(pub()));
-app.put('/api/admin/settings', adm, (q, r) => {
-  const st = db.prepare('INSERT INTO settings(key,value) VALUES(?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value');
-  db.transaction(() => {
-    for (const k of KEYS) {
-      if (!(k in q.body)) continue;
-      let v = q.body[k];
-      if (k === 'phones') v = JSON.stringify(v);
-      if (k === 'admin_password' && !String(v).trim()) continue;
-      st.run(k, String(v ?? ''));
-    }
-  })();
-  r.json({ ok: 1 });
-});
-
-app.get('/api/admin/bookings', adm, (q, r) => {
-  const rows = q.query.date
-    ? db.prepare('SELECT * FROM bookings WHERE date=? ORDER BY time').all(q.query.date)
-    : db.prepare('SELECT * FROM bookings WHERE date>=? ORDER BY date,time').all(nowLocal().date);
-  r.json(rows.map(b => ({ ...b, services: JSON.parse(b.services), inspection: JSON.parse(b.inspection) })));
-});
-app.put('/api/admin/bookings/:id/cancel', adm, (q, r) => {
-  db.prepare("UPDATE bookings SET status='cancelled' WHERE id=?").run(q.params.id); r.json({ ok: 1 });
-});
-
-const up = multer({
-  storage: multer.diskStorage({
-    destination: path.join(DATA, 'uploads'),
-    filename: (q, f, cb) => cb(null, crypto.randomBytes(10).toString('hex') + (path.extname(f.originalname).toLowerCase().replace(/[^.a-z0-9]/g, '') || '.jpg')),
-  }),
-  limits: { fileSize: 10 * 1024 * 1024 },
-  fileFilter: (q, f, cb) => cb(null, /^image\//.test(f.mimetype)),
-});
-app.post('/api/admin/upload', adm, up.single('file'), (q, r) =>
-  q.file ? r.json({ url: '/uploads/' + q.file.filename }) : r.status(400).json({ error: 'ملف غير صالح' }));
-
-app.listen(process.env.PORT || 3000, () => console.log('Laverne Center running'));
-
-````
-
-## الملف: public/index.html
-
-````html
-<!doctype html>
+<!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-<meta charset="utf-8">
+<meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>مركز لاڤيرن</title>
+<meta name="theme-color" content="#f8eef1">
+<title>LAVERNE CENTER | مركز لاڤيرن</title>
+
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css">
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+<style>
+:root{
+  --pink:#e9cbd4;
+  --pink2:#f8edf0;
+  --gold:#b28b55;
+  --gold2:#ddc49a;
+  --dark:#30252b;
+  --muted:#88777e;
+  --white:#fff;
+  --line:#eee1e5;
+  --shadow:0 12px 35px #65404d12;
+}
+*{box-sizing:border-box}
+body{
+  margin:0;
+  background:#faf6f7;
+  color:var(--dark);
+  font-family:'Cairo',sans-serif;
+}
+button,input{font-family:inherit}
+button{cursor:pointer}
+.topbar{
+  position:sticky;top:0;z-index:20;
+  background:#fffdfdf0;
+  backdrop-filter:blur(16px);
+  border-bottom:1px solid var(--line);
+  padding:12px 18px;
+  display:flex;align-items:center;justify-content:space-between;
+}
+.logo{
+  border:0;background:none;text-align:right;
+  color:var(--dark);padding:0;
+}
+.logo small{display:block;color:var(--gold);font-size:10px;letter-spacing:3px}
+.logo strong{font-size:23px;letter-spacing:2px}
+.top-label{font-size:11px;color:var(--muted)}
+.hero{
+  margin:16px;
+  min-height:240px;
+  border-radius:25px;
+  overflow:hidden;
+  position:relative;
+  background:
+  linear-gradient(90deg,#34252e80,#34252e20),
+  url('https://images.unsplash.com/photo-1560066984-138dadb4c035?w=1200') center/cover;
+  display:flex;align-items:center;
+  color:white;padding:28px;
+}
+.hero-content{max-width:280px}
+.hero small{color:#f3dcb6;letter-spacing:2px}
+.hero h1{font-size:30px;line-height:1.5;margin:8px 0}
+.hero p{font-size:13px;line-height:2;margin:0}
+.section-title{
+  padding:0 19px;
+  display:flex;align-items:center;justify-content:space-between;
+  margin:26px 0 13px;
+}
+.section-title h2{font-size:19px;margin:0}
+.section-title span{font-size:11px;color:var(--gold)}
+.categories{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:12px;padding:0 16px;
+}
+.category{
+  border:1px solid var(--line);
+  background:white;border-radius:19px;
+  overflow:hidden;box-shadow:var(--shadow);
+  text-align:right;padding:0;
+  color:var(--dark);
+  transition:.2s;
+}
+.category:active{transform:scale(.98)}
+.category img{
+  width:100%;height:120px;object-fit:cover;display:block;
+}
+.category-info{padding:10px 12px 13px}
+.category-info strong{font-size:14px}
+.category-info small{display:block;color:var(--muted);font-size:10px}
+.services-area{padding:0 16px}
+.service-card{
+  display:flex;align-items:center;justify-content:space-between;
+  background:white;border:1px solid var(--line);
+  border-radius:16px;padding:13px;margin-bottom:10px;
+  box-shadow:var(--shadow);gap:10px;
+}
+.service-card h3{font-size:13px;margin:0 0 3px}
+.service-card p{font-size:10px;color:var(--muted);margin:0}
+.price{color:var(--gold);font-weight:800;font-size:14px;white-space:nowrap}
+.add-btn{
+  border:0;background:var(--pink2);color:#805b69;
+  border-radius:12px;padding:8px 13px;font-weight:800;
+}
+.add-btn.selected{background:var(--gold);color:white}
+.panel{
+  margin:18px 16px;padding:18px;
+  background:white;border:1px solid var(--line);
+  border-radius:20px;box-shadow:var(--shadow);
+}
+.panel h3{margin:0 0 14px;font-size:16px}
+.field{margin-bottom:12px}
+.field label{display:block;font-size:12px;margin-bottom:5px;color:var(--muted)}
+.field input{
+  width:100%;padding:12px;border-radius:12px;
+  border:1px solid var(--line);background:#fffafb;
+  outline:none;font-size:14px;
+}
+.field input:focus{border-color:var(--gold)}
+.summary-row{
+  display:flex;justify-content:space-between;
+  font-size:12px;padding:7px 0;border-bottom:1px solid var(--line);
+}
+.total{font-size:18px;font-weight:900;color:var(--gold);padding-top:12px}
+.main-btn{
+  width:100%;border:0;border-radius:14px;
+  padding:14px;background:linear-gradient(110deg,#b18a55,#d9bd8d);
+  color:white;font-size:15px;font-weight:800;
+  box-shadow:0 7px 18px #b18a5530;
+}
+.main-btn:disabled{opacity:.5;cursor:not-allowed}
+.note{font-size:10px;color:var(--muted);line-height:2}
+.status{font-size:12px;margin:10px 0;color:#856a43}
+.footer{
+  text-align:center;padding:30px 15px 100px;
+  color:var(--muted);font-size:11px;
+}
+.bottom-nav{
+  position:fixed;bottom:0;left:0;right:0;z-index:30;
+  background:#fffdfdf5;backdrop-filter:blur(12px);
+  border-top:1px solid var(--line);
+  display:flex;justify-content:space-around;padding:9px 5px calc(9px + env(safe-area-inset-bottom));
+}
+.bottom-nav button{
+  background:none;border:0;color:var(--muted);
+  font-size:10px;display:flex;flex-direction:column;align-items:center;gap:2px;
+}
+.bottom-nav b{font-size:18px}
+.hidden{display:none!important}
+.overlay{
+  position:fixed;inset:0;background:#24182080;z-index:50;
+  display:flex;align-items:center;justify-content:center;padding:18px;
+}
+.modal{
+  background:white;border-radius:22px;padding:22px;
+  width:100%;max-width:420px;max-height:85vh;overflow:auto;
+}
+.modal h3{margin-top:0}
+.close{
+  float:left;border:0;background:var(--pink2);
+  border-radius:10px;padding:5px 11px;
+}
+.admin-box{margin-top:15px}
+.admin-box button{margin:5px 0}
+@media(min-width:700px){
+  .hero{max-width:1000px;margin:25px auto;min-height:320px}
+  .categories{max-width:1000px;margin:auto;grid-template-columns:repeat(3,1fr)}
+  .services-area,.panel{max-width:700px;margin-left:auto;margin-right:auto}
+}
+</style>
 </head>
+
 <body>
-<header><div id="logo" class="logo"><span id="logoimg"></span><div><b id="nameEn"></b><small id="nameAr"></small></div></div></header>
-<main id="app"></main>
-<div id="cartbar" class="cartbar" hidden></div>
-<div id="modal"></div>
-<script src="app.js"></script>
+
+<header class="topbar">
+  <button class="logo" id="logo">
+    <small>LUXURY BEAUTY EXPERIENCE</small>
+    <strong>LAVERNE</strong>
+  </button>
+  <div class="top-label">مركز لاڤيرن للتجميل</div>
+</header>
+
+<section class="hero">
+  <div class="hero-content">
+    <small>WELCOME TO LAVERNE</small>
+    <h1>جمالك يستحق<br>تجربة استثنائية</h1>
+    <p>تفاصيل من الأناقة، عناية تليق بك، وتجربة مختلفة في كل زيارة.</p>
+  </div>
+</section>
+
+<div class="section-title">
+  <h2>اكتشفي أقسامنا</h2>
+  <span>اختاري تجربتك</span>
+</div>
+
+<section class="categories" id="categories">
+  <button class="category" onclick="showCategory('hair')">
+    <img src="https://images.unsplash.com/photo-1560869713-7d0a29430803?w=700" alt="الشعر">
+    <div class="category-info"><strong>الشعر</strong><small>Hair Studio</small></div>
+  </button>
+  <button class="category" onclick="showCategory('makeup')">
+    <img src="https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?w=700" alt="المكياج">
+    <div class="category-info"><strong>المكياج</strong><small>Makeup</small></div>
+  </button>
+  <button class="category" onclick="showCategory('skin')">
+    <img src="https://images.unsplash.com/photo-1570172619644-dfd03ed5d881?w=700" alt="البشرة">
+    <div class="category-info"><strong>البشرة</strong><small>Skin Care</small></div>
+  </button>
+  <button class="category" onclick="showCategory('bath')">
+    <img src="https://images.unsplash.com/photo-1540555700478-4be289fbecef?w=700" alt="الحمام">
+    <div class="category-info"><strong>الحمام البخاري والمغربي</strong><small>Moroccan Bath</small></div>
+  </button>
+  <button class="category" onclick="showCategory('nails')">
+    <img src="https://images.unsplash.com/photo-1604654894610-df63bc536371?w=700" alt="الأظافر">
+    <div class="category-info"><strong>الأظافر</strong><small>Nail Studio</small></div>
+  </button>
+  <button class="category" onclick="showCategory('offers')">
+    <img src="https://images.unsplash.com/photo-1600948836101-f9ffda59d250?w=700" alt="العروض">
+    <div class="category-info"><strong>العروض والباقات</strong><small>Special Offers</small></div>
+  </button>
+</section>
+
+<section id="serviceSection" class="hidden">
+  <div class="section-title">
+    <h2 id="categoryTitle">الخدمات</h2>
+    <span onclick="backCategories()" style="cursor:pointer">رجوع للأقسام ←</span>
+  </div>
+  <div class="services-area" id="servicesList"></div>
+</section>
+
+<div class="section-title">
+  <h2>حجز موعدك</h2>
+  <span>خطوات بسيطة</span>
+</div>
+
+<section class="panel" id="bookingPanel">
+  <h3>بيانات الحجز</h3>
+
+  <div class="field">
+    <label>الاسم الكامل</label>
+    <input id="customerName" placeholder="اكتبي اسمك">
+  </div>
+
+  <div class="field">
+    <label>رقم الهاتف</label>
+    <input id="customerPhone" type="tel" placeholder="09xxxxxxxx">
+  </div>
+
+  <div class="field">
+    <label>تاريخ الموعد</label>
+    <input id="bookingDate" type="date">
+  </div>
+
+  <div class="field">
+    <label>الوقت</label>
+    <input id="bookingTime" type="time">
+  </div>
+
+  <h3 style="margin-top:20px">ملخص الخدمات</h3>
+  <div id="selectedServices">
+    <p class="note">لم تختاري أي خدمة بعد. اختاري من الأقسام بالأعلى.</p>
+  </div>
+  <div class="summary-row total">
+    <span>الإجمالي الثابت</span>
+    <span id="totalPrice">0 د.ل</span>
+  </div>
+
+  <p class="note">الخدمات التي تحتاج معاينة أو تحديد سعر من الإدارة لا تدخل ضمن الإجمالي الثابت.</p>
+  <div id="status" class="status"></div>
+  <button class="main-btn" id="bookButton" onclick="submitBooking()">تأكيد الحجز</button>
+</section>
+
+<div class="footer">
+  <strong>LAVERNE CENTER</strong>
+  <p>الجمال يبدأ من هنا</p>
+  <p>© جميع الحقوق محفوظة لمركز لاڤيرن</p>
+</div>
+
+<nav class="bottom-nav">
+  <button onclick="window.scrollTo({top:0,behavior:'smooth'})"><b>⌂</b>الرئيسية</button>
+  <button onclick="document.getElementById('categories').scrollIntoView({behavior:'smooth'})"><b>✧</b>الأقسام</button>
+  <button onclick="document.getElementById('bookingPanel').scrollIntoView({behavior:'smooth'})"><b>▣</b>الحجز</button>
+</nav>
+
+<div class="overlay hidden" id="adminOverlay">
+  <div class="modal">
+    <button class="close" onclick="closeAdmin()">إغلاق</button>
+    <h3>إدارة مركز لاڤيرن</h3>
+    <div id="adminLogin">
+      <div class="field">
+        <label>الرقم السري</label>
+        <input id="adminPin" type="password" placeholder="أدخلي الرقم السري">
+      </div>
+      <button class="main-btn" onclick="adminLogin()">دخول الإدارة</button>
+    </div>
+    <div id="adminContent" class="hidden">
+      <p>تم الدخول إلى لوحة الإدارة.</p>
+      <button class="main-btn" onclick="loadAdminBookings()">عرض الحجوزات</button>
+      <div id="adminBookings" class="admin-box"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* رابط قاعدة البيانات */
+const API_URL = "https://script.google.com/macros/s/AKfycbyGxzUt2PUrtSQtN1aXMweAilmt21fbHAcR1SHA2y4bwBdw7_T7NQ0QiJirjdYWdQB5/exec";
+
+/* رقم واتساب المركز - قابل للتغيير */
+let WHATSAPP_NUMBER = "218912744233";
+
+const categories = {
+  hair: {
+    name:"الشعر",
+    services:[
+      {name:"قص وتصفيف",price:40},
+      {name:"صبغة كاملة",price:150},
+      {name:"كيراتين",price:250}
+    ]
+  },
+  makeup:{
+    name:"المكياج",
+    services:[
+      {name:"مكياج سهرة",price:150},
+      {name:"مكياج وتسريحة عروس",price:700}
+    ]
+  },
+  skin:{
+    name:"البشرة",
+    services:[
+      {name:"تنظيف بشرة عميق",price:90},
+      {name:"جلسة ترطيب",price:70}
+    ]
+  },
+  bath:{
+    name:"الحمام البخاري والمغربي",
+    services:[]
+  },
+  nails:{
+    name:"الأظافر",
+    services:[
+      {name:"مانيكير",price:35},
+      {name:"باديكير",price:45}
+    ]
+  },
+  offers:{
+    name:"العروض والباقات",
+    services:[]
+  }
+};
+
+let selected = [];
+let config = {};
+let bookedData = {};
+let adminPin = "";
+let logoClicks = 0;
+let logoTimer = null;
+
+function showStatus(message){
+  document.getElementById("status").textContent = message;
+}
+
+function money(value){
+  return Number(value).toLocaleString("en-US") + " د.ل";
+}
+
+function showCategory(key){
+  const cat = categories[key];
+  document.getElementById("categories").classList.add("hidden");
+  document.getElementById("serviceSection").classList.remove("hidden");
+  document.getElementById("categoryTitle").textContent = cat.name;
+
+  const list = document.getElementById("servicesList");
+  list.innerHTML = "";
+
+  if(!cat.services.length){
+    list.innerHTML = '<div class="panel"><p>سيتم إضافة الخدمات والأسعار لهذا القسم قريباً.</p></div>';
+    return;
+  }
+
+  cat.services.forEach((service,index)=>{
+    const exists = selected.some(x=>x.key===key && x.name===service.name);
+    const card = document.createElement("div");
+    card.className = "service-card";
+
+    const info = document.createElement("div");
+    const title = document.createElement("h3");
+    title.textContent = service.name;
+    const price = document.createElement("p");
+    price.className = "price";
+    price.textContent = money(service.price);
+    info.append(title,price);
+
+    const btn = document.createElement("button");
+    btn.className = "add-btn" + (exists ? " selected":"");
+    btn.textContent = exists ? "تمت الإضافة ✓" : "+ إضافة";
+    btn.onclick = ()=>{
+      toggleService(key,service);
+      showCategory(key);
+    };
+
+    card.append(info,btn);
+    list.appendChild(card);
+  });
+}
+
+function backCategories(){
+  document.getElementById("serviceSection").classList.add("hidden");
+  document.getElementById("categories").classList.remove("hidden");
+}
+
+function toggleService(key,service){
+  const index = selected.findIndex(
+    x=>x.key===key && x.name===service.name
+  );
+
+  if(index>=0){
+    selected.splice(index,1);
+  }else{
+    selected.push({
+      key:key,
+      name:service.name,
+      price:Number(service.price)
+    });
+  }
+
+  updateSummary();
+}
+
+function updateSummary(){
+  const box = document.getElementById("selectedServices");
+  box.innerHTML = "";
+
+  if(!selected.length){
+    box.innerHTML = '<p class="note">لم تختاري أي خدمة بعد.</p>';
+  }
+
+  selected.forEach((service,index)=>{
+    const row = document.createElement("div");
+    row.className = "summary-row";
+
+    const name = document.createElement("span");
+    name.textContent = service.name;
+
+    const amount = document.createElement("strong");
+    amount.textContent = money(service.price);
+
+    const remove = document.createElement("button");
+    remove.textContent = "×";
+    remove.style.cssText = "border:0;background:none;color:#a66;padding:0 8px;font-size:18px";
+    remove.onclick = ()=>{
+      selected.splice(index,1);
+      updateSummary();
+    };
+
+    row.append(name,amount,remove);
+    box.appendChild(row);
+  });
+
+  const total = selected.reduce((sum,item)=>sum+item.price,0);
+  document.getElementById("totalPrice").textContent = money(total);
+}
+
+async function loadWebsite(){
+  try{
+    const response = await fetch(API_URL);
+    const result = await response.json();
+
+    if(result.success){
+      config = result.cfg || {};
+      bookedData = result.booked || {};
+
+      if(config.whatsapp){
+        WHATSAPP_NUMBER = String(config.whatsapp).replace(/\D/g,"");
+      }
+    }
+  }catch(error){
+    console.log("تعذر تحميل الإعدادات:",error);
+  }
+}
+
+function validateBooking(){
+  const name = document.getElementById("customerName").value.trim();
+  const phone = document.getElementById("customerPhone").value.trim();
+  const date = document.getElementById("bookingDate").value;
+  const time = document.getElementById("bookingTime").value;
+
+  if(!name || !phone || !date || !time){
+    throw new Error("يرجى تعبئة جميع بيانات الحجز.");
+  }
+
+  if(!selected.length){
+    throw new Error("يرجى اختيار خدمة واحدة على الأقل.");
+  }
+
+  return {name,phone,date,time};
+}
+
+async function submitBooking(){
+  const button = document.getElementById("bookButton");
+
+  try{
+    const customer = validateBooking();
+    button.disabled = true;
+    button.textContent = "جاري تسجيل الحجز...";
+    showStatus("");
+
+    const categoriesUsed = [...new Set(selected.map(x=>x.key))];
+    const total = selected.reduce((sum,item)=>sum+item.price,0);
+
+    const payload = {
+      action:"book",
+      date:customer.date,
+      time:customer.time,
+      name:customer.name,
+      phone:customer.phone,
+      categoryKeys:categoriesUsed,
+      services:selected.map(x=>({
+        name:x.name,
+        category:x.key,
+        price:x.price
+      })),
+      total:total,
+      totalText:money(total)
+    };
+
+    const response = await fetch(API_URL,{
+      method:"POST",
+      body:JSON.stringify(payload)
+    });
+
+    const result = await response.json();
+
+    if(!result.success){
+      throw new Error(result.error || "تعذر تسجيل الحجز.");
+    }
+
+    showStatus("تم تسجيل حجزك بنجاح ❤️ رقم الحجز: " + result.bookingId);
+    button.textContent = "تم تأكيد الحجز ✓";
+
+    const message =
+      "مرحباً مركز لاڤيرن، تم تسجيل حجزي بالموقع.%0A"+
+      "رقم الحجز: "+encodeURIComponent(result.bookingId)+"%0A"+
+      "الاسم: "+encodeURIComponent(customer.name)+"%0A"+
+      "الهاتف: "+encodeURIComponent(customer.phone)+"%0A"+
+      "التاريخ: "+encodeURIComponent(customer.date)+"%0A"+
+      "الوقت: "+encodeURIComponent(customer.time)+"%0A"+
+      "الخدمات: "+encodeURIComponent(selected.map(x=>x.name).join("، "))+"%0A"+
+      "الإجمالي: "+encodeURIComponent(money(total));
+
+    const whatsappLink = "https://wa.me/"+WHATSAPP_NUMBER+"?text="+message;
+
+    const status = document.getElementById("status");
+    const link = document.createElement("a");
+    link.href = whatsappLink;
+    link.target = "_blank";
+    link.rel = "noopener";
+    link.textContent = "إرسال تفاصيل الحجز عبر واتساب";
+    link.style.cssText = "display:block;margin-top:12px;color:#8a6842;font-weight:bold";
+    status.appendChild(document.createElement("br"));
+    status.appendChild(link);
+
+  }catch(error){
+    showStatus(error.message);
+    button.disabled = false;
+    button.textContent = "تأكيد الحجز";
+  }
+}
+
+/* دخول الإدارة بالضغط على الشعار خمس مرات */
+document.getElementById("logo").addEventListener("click",()=>{
+  logoClicks++;
+  clearTimeout(logoTimer);
+
+  logoTimer = setTimeout(()=>logoClicks=0,1800);
+
+  if(logoClicks>=5){
+    logoClicks=0;
+    document.getElementById("adminOverlay").classList.remove("hidden");
+  }
+});
+
+function closeAdmin(){
+  document.getElementById("adminOverlay").classList.add("hidden");
+}
+
+async function adminLogin(){
+  const pin = document.getElementById("adminPin").value.trim();
+
+  if(!pin){
+    alert("أدخلي الرقم السري");
+    return;
+  }
+
+  adminPin = pin;
+
+  try{
+    const response = await fetch(API_URL,{
+      method:"POST",
+      body:JSON.stringify({
+        action:"list",
+        pin:adminPin
+      })
+    });
+
+    const result = await response.json();
+
+    if(!result.success){
+      throw new Error(result.error || "تعذر الدخول");
+    }
+
+    document.getElementById("adminLogin").classList.add("hidden");
+    document.getElementById("adminContent").classList.remove("hidden");
+    renderAdminBookings(result.bookings || []);
+
+  }catch(error){
+    alert(error.message);
+  }
+}
+
+async function loadAdminBookings(){
+  try{
+    const response = await fetch(API_URL,{
+      method:"POST",
+      body:JSON.stringify({
+        action:"list",
+        pin:adminPin
+      })
+    });
+
+    const result = await response.json();
+
+    if(!result.success) throw new Error(result.error);
+
+    renderAdminBookings(result.bookings || []);
+
+  }catch(error){
+    alert(error.message);
+  }
+}
+
+function renderAdminBookings(bookings){
+  const box = document.getElementById("adminBookings");
+  box.innerHTML = "";
+
+  if(!bookings.length){
+    box.textContent = "لا توجد حجوزات.";
+    return;
+  }
+
+  bookings.slice().reverse().forEach(item=>{
+    const card = document.createElement("div");
+    card.className = "service-card";
+
+    const info = document.createElement("div");
+    const name = document.createElement("strong");
+    name.textContent = item["الاسم"] || "";
+    const details = document.createElement("p");
+    details.textContent =
+      (item["التاريخ"] || "")+" - "+
+      (item["الوقت"] || "")+" - "+
+      (item["الهاتف"] || "");
+
+    const state = document.createElement("p");
+    state.textContent = "الحالة: "+(item["الحالة"] || "");
+
+    info.append(name,details,state);
+    card.appendChild(info);
+
+    if(String(item["الحالة"]) !== "CANCELLED"){
+      const cancel = document.createElement("button");
+      cancel.className = "add-btn";
+      cancel.textContent = "إلغاء";
+      cancel.onclick = ()=>cancelBooking(item["ID"]);
+      card.appendChild(cancel);
+    }
+
+    box.appendChild(card);
+  });
+}
+
+async function cancelBooking(id){
+  if(!confirm("هل تريدين إلغاء هذا الحجز؟")) return;
+
+  try{
+    const response = await fetch(API_URL,{
+      method:"POST",
+      body:JSON.stringify({
+        action:"deleteBooking",
+        pin:adminPin,
+        id:id
+      })
+    });
+
+    const result = await response.json();
+
+    if(!result.success) throw new Error(result.error);
+
+    alert("تم إلغاء الحجز.");
+    loadAdminBookings();
+
+  }catch(error){
+    alert(error.message);
+  }
+}
+
+const dateInput = document.getElementById("bookingDate");
+const today = new Date();
+const localToday = new Date(today.getTime()-today.getTimezoneOffset()*60000)
+  .toISOString().split("T")[0];
+dateInput.min = localToday;
+
+loadWebsite();
+</script>
+
 </body>
 </html>
-
-````
-
-## الملف: public/style.css
-
-````css
-:root{--p:#d9769b;--g:#c9a24b;--bg:#fff1f5;--ink:#4a2b38}
-*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-body{margin:0;font-family:'Tajawal',system-ui,sans-serif;color:var(--ink);background:var(--bg) center/cover fixed;min-height:100vh;padding-bottom:90px}
-header{position:sticky;top:0;z-index:5;padding:10px 16px;background:rgba(255,255,255,.55);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-bottom:1px solid rgba(255,255,255,.7)}
-.logo{display:flex;align-items:center;gap:10px;justify-content:center;cursor:pointer;user-select:none;-webkit-user-select:none}
-.logo img{height:46px;width:46px;border-radius:50%;object-fit:cover;border:2px solid var(--g)}
-.logo b{display:block;letter-spacing:3px;color:var(--g);font-size:18px}.logo small{font-size:15px;color:var(--p);font-weight:700}
-main{max-width:760px;margin:auto;padding:16px}
-h2{margin:8px 0 14px;color:var(--p)}
-.hero{text-align:center;margin:10px 0 18px}.hero h1{margin:0;font-size:26px;background:linear-gradient(90deg,var(--p),var(--g));-webkit-background-clip:text;background-clip:text;color:transparent}
-.glass{background:rgba(255,255,255,.62);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,.85);border-radius:22px;box-shadow:0 10px 30px rgba(120,60,90,.14)}
-.grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
-.poster{all:unset;cursor:pointer;display:block;border-radius:22px;overflow:hidden;box-shadow:0 12px 28px rgba(120,60,90,.22);transition:transform .25s,box-shadow .25s;aspect-ratio:3/4;background:linear-gradient(160deg,var(--p),var(--g))}
-.poster:active{transform:scale(.96) rotateX(4deg)}.poster img{width:100%;height:100%;object-fit:cover;display:block}
-.poster .ph{height:100%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:22px;font-weight:800;padding:12px;text-align:center}
-.offers{display:flex;gap:12px;overflow-x:auto;padding-bottom:8px;margin-bottom:16px;scroll-snap-type:x mandatory}
-.offer{flex:0 0 86%;scroll-snap-align:center;padding:0;overflow:hidden}.offer img{width:100%;max-height:200px;object-fit:cover;display:block}
-.offer div{padding:12px 14px}.offer h3{margin:0 0 4px;color:var(--p)}.old{text-decoration:line-through;opacity:.55;margin-inline-start:8px}.new{color:var(--g);font-weight:800;font-size:18px}
-.badge{display:inline-block;background:var(--g);color:#fff;border-radius:99px;padding:2px 10px;font-size:12px;margin-bottom:4px}
-.svc{margin-bottom:14px;overflow:hidden}.svc img.cover{width:100%;height:170px;object-fit:cover;display:block}
-.svc .in{padding:14px}.svc h3{margin:0 0 4px}.svc p{margin:4px 0;opacity:.8}.svc ul{margin:8px 0;padding-inline-start:20px;font-size:14px}
-.price{font-weight:800;color:var(--g);margin:6px 0}
-.btn{border:0;border-radius:14px;padding:11px 18px;font:inherit;font-weight:700;color:#fff;background:linear-gradient(135deg,var(--p),var(--g));box-shadow:0 6px 16px rgba(217,118,155,.4);cursor:pointer;text-decoration:none;display:inline-block;text-align:center}
-.btn.ghost{background:rgba(255,255,255,.8);color:var(--p);box-shadow:none;border:1px solid var(--p)}.btn.on{background:#3a8f5c}.btn.full{width:100%}
-.back{margin-bottom:8px}
-.cartbar{position:fixed;inset-inline:12px;bottom:calc(12px + env(safe-area-inset-bottom));z-index:6;padding:12px 16px;display:flex;justify-content:space-between;align-items:center;max-width:736px;margin:auto}
-form label{display:block;margin:12px 0 4px;font-weight:700}
-input,select,textarea{width:100%;padding:12px;border:1px solid #e6c9d4;border-radius:12px;font:inherit;background:#fff}
-.slots{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:6px}
-.slot{padding:10px 0;border-radius:10px;border:1px solid var(--p);background:#fff;font:inherit;cursor:pointer}
-.slot.sel{background:var(--p);color:#fff}.slot:disabled{opacity:.35;text-decoration:line-through;cursor:not-allowed}
-.box{padding:16px;margin-bottom:14px}.row{display:flex;justify-content:space-between;gap:8px;padding:4px 0}
-.err{color:#c0392b;margin:8px 0;font-weight:700}.note{font-size:13px;opacity:.75}
-.modal{position:fixed;inset:0;background:rgba(40,10,25,.45);display:flex;align-items:center;justify-content:center;z-index:20;padding:16px}
-.modal .glass{background:#fff;padding:20px;width:100%;max-width:340px}
-.contact{text-align:center;margin-top:24px;font-size:14px;opacity:.85}.contact a{color:var(--p);margin:0 6px}
-.fade{animation:f .35s ease}@keyframes f{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
-
-````
-
-## الملف: public/app.js
-
-````js
-const $ = s => document.querySelector(s);
-const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-const money = n => new Intl.NumberFormat('en').format(n || 0) + ' د.ل';
-const priceText = s => s.price_type === 'fixed' ? money(s.price)
-  : s.price_type === 'variable' ? `${money(s.price_min)} – ${money(s.price_max)} (تقديري)` : 'السعر يحدد بعد المعاينة';
-let D, cart = new Set(), view = { n: 'home' }, pick = {};
-const today = () => { const d = new Date(); return new Date(d - d.getTimezoneOffset() * 6e4).toISOString().slice(0, 10); };
-
-async function load() {
-  D = await (await fetch('/api/data')).json();
-  const s = D.settings, r = document.documentElement.style;
-  r.setProperty('--p', s.color_primary); r.setProperty('--g', s.color_gold); r.setProperty('--bg', s.color_bg);
-  document.body.style.backgroundImage = s.bg_image ? `url(${s.bg_image})` : 'none';
-  $('#nameEn').textContent = s.name_en; $('#nameAr').textContent = s.name_ar; document.title = s.name_ar;
-  $('#logoimg').innerHTML = s.logo ? `<img src="${esc(s.logo)}" alt="">` : '';
-  // إزالة من السلة أي خدمة لم تعد موجودة
-  cart = new Set([...cart].filter(id => D.services.some(x => x.id === id)));
-}
-const go = (n, extra = {}) => { view = { n, ...extra }; render(); scrollTo(0, 0); };
-
-function render() {
-  ({ home, cat, book, done }[view.n])();
-  const bar = $('#cartbar');
-  bar.hidden = !cart.size || view.n === 'book' || view.n === 'done';
-  bar.className = 'cartbar glass';
-  bar.innerHTML = `<b>${cart.size} خدمة مختارة</b><button class="btn" id="goBook">متابعة الحجز</button>`;
-  $('#goBook') && ($('#goBook').onclick = () => go('book'));
-}
-
-function home() {
-  const s = D.settings;
-  const offers = D.offers.length ? `<div class="offers">${D.offers.map(o => `
-    <div class="glass offer fade">${o.image ? `<img src="${esc(o.image)}" alt="">` : ''}<div><span class="badge">عرض خاص</span>
-    <h3>${esc(o.title)}</h3><div>${esc(o.description)}</div>
-    <div>${o.old_price ? `<span class="old">${money(o.old_price)}</span>` : ''}${o.new_price ? `<span class="new">${money(o.new_price)}</span>` : ''}</div>
-    <a class="btn full" style="margin-top:8px" target="_blank" href="https://wa.me/${String(s.whatsapp).replace(/\D/g, '')}?text=${encodeURIComponent('أرغب بالاستفسار عن عرض: ' + o.title)}">احجزي هذا العرض</a></div></div>`).join('')}</div>` : '';
-  const phones = (s.phones || []).map(p => `<a href="tel:${esc(p)}">${esc(p)}</a>`).join('');
-  $('#app').innerHTML = `<div class="hero fade"><h1>${esc(s.hero_text)}</h1></div>${offers}
-    <div class="grid">${D.categories.map(c => `<button class="poster fade" data-c="${c.id}">${c.poster ? `<img src="${esc(c.poster)}" alt="${esc(c.name)}">` : `<div class="ph">${esc(c.name)}</div>`}</button>`).join('')}</div>
-    <div class="contact">${s.address ? `<div>${esc(s.address)}</div>` : ''}${s.hours ? `<div>${esc(s.hours)}</div>` : ''}<div>${phones}</div>
-    ${s.website ? `<div><a href="${esc(s.website)}" target="_blank" rel="noopener">${esc(s.website)}</a></div>` : ''}</div>`;
-  document.querySelectorAll('[data-c]').forEach(b => b.onclick = () => go('cat', { id: +b.dataset.c }));
-}
-
-function cat() {
-  const c = D.categories.find(x => x.id === view.id); if (!c) return go('home');
-  const list = D.services.filter(s => s.category_id === c.id);
-  $('#app').innerHTML = `<button class="btn ghost back" id="back">→ رجوع</button><h2>${esc(c.name)}</h2>` +
-    (list.map(s => `<div class="glass svc fade">${s.image ? `<img class="cover" src="${esc(s.image)}" alt="">` : ''}<div class="in">
-      <h3>${esc(s.name)}</h3>${s.description ? `<p>${esc(s.description)}</p>` : ''}
-      ${s.includes ? `<ul>${s.includes.split('\n').filter(Boolean).map(i => `<li>${esc(i)}</li>`).join('')}</ul>` : ''}
-      <div class="price">${priceText(s)}</div>
-      <button class="btn full ${cart.has(s.id) ? 'on' : ''}" data-s="${s.id}">${cart.has(s.id) ? '✓ تمت الإضافة (إزالة)' : 'اختيار الخدمة وإضافتها للحجز'}</button></div></div>`).join('') || '<p>لا توجد خدمات حالياً</p>');
-  $('#back').onclick = () => go('home');
-  document.querySelectorAll('[data-s]').forEach(b => b.onclick = () => {
-    const id = +b.dataset.s; cart.has(id) ? cart.delete(id) : cart.add(id);
-    const y = scrollY; render(); scrollTo(0, y);
-  });
-}
-
-function summary(list) {
-  let fixed = 0, min = 0, max = 0; const insp = [];
-  list.forEach(s => s.price_type === 'fixed' ? fixed += s.price || 0 : s.price_type === 'variable' ? (min += s.price_min || 0, max += s.price_max || 0) : insp.push(s.name));
-  return `<div class="glass box">${list.map(s => `<div class="row"><span>${esc(s.name)}</span><span>${s.price_type === 'inspection' ? 'بعد المعاينة' : s.price_type === 'fixed' ? money(s.price) : money(s.price_min) + ' – ' + money(s.price_max)}</span></div>`).join('')}<hr>
-    <div class="row"><b>الإجمالي الثابت</b><b>${money(fixed)}</b></div>
-    ${min || max ? `<div class="row"><span>الأسعار التقديرية</span><span>${money(min)} – ${money(max)}</span></div>` : ''}
-    ${insp.length ? `<div class="note">تحتاج معاينة: ${esc(insp.join('، '))}</div>` : ''}
-    ${min || max || insp.length ? `<div class="note">السعر النهائي لبعض الخدمات يحدد داخل المركز.</div>` : ''}</div>`;
-}
-
-function book() {
-  const list = [...cart].map(id => D.services.find(s => s.id === id)).filter(Boolean);
-  if (!list.length) return go('home');
-  const cats = [...new Set(list.map(s => s.category_id))];
-  pick = pick.time ? pick : { time: '' };
-  $('#app').innerHTML = `<button class="btn ghost back" id="back">→ رجوع</button><h2>تأكيد الحجز</h2>${summary(list)}
-    <div class="glass box"><form id="f">
-    <label>الاسم</label><input id="nm" autocomplete="name" required>
-    <label>رقم الهاتف</label><input id="ph" type="tel" inputmode="tel" autocomplete="tel" required>
-    <label>تاريخ الحجز</label><input id="dt" type="date" min="${today()}" required>
-    <label>الوقت</label><div id="sl" class="note">اختاري التاريخ لعرض الأوقات المتاحة</div>
-    <div class="err" id="er"></div><button class="btn full" id="sub">تأكيد الحجز</button></form></div>
-    <button class="btn ghost full" id="clear">إفراغ الاختيار</button>`;
-  $('#back').onclick = () => go('home');
-  $('#clear').onclick = () => { cart.clear(); go('home'); };
-  const loadSlots = async () => {
-    const d = $('#dt').value; pick.time = ''; if (!d) return;
-    $('#sl').textContent = 'جارٍ التحميل...';
-    const sl = await (await fetch(`/api/slots?date=${d}&cats=${cats}`)).json();
-    $('#sl').className = 'slots';
-    $('#sl').innerHTML = sl.some(x => x.available) ? sl.map(x => `<button type="button" class="slot" data-t="${x.time}" ${x.available ? '' : 'disabled'}>${x.time}</button>`).join('') : '<div class="note" style="grid-column:1/-1">لا توجد أوقات متاحة في هذا اليوم</div>';
-    document.querySelectorAll('.slot').forEach(b => b.onclick = () => {
-      document.querySelectorAll('.slot').forEach(x => x.classList.remove('sel')); b.classList.add('sel'); pick.time = b.dataset.t;
-    });
-  };
-  $('#dt').onchange = loadSlots;
-  $('#f').onsubmit = async e => {
-    e.preventDefault(); $('#er').textContent = '';
-    if (!pick.time) return $('#er').textContent = 'اختاري الوقت المناسب';
-    $('#sub').disabled = true;
-    const r = await fetch('/api/bookings', { method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name: $('#nm').value, phone: $('#ph').value, date: $('#dt').value, time: pick.time, serviceIds: [...cart] }) });
-    const j = await r.json(); $('#sub').disabled = false;
-    if (!r.ok) { $('#er').textContent = j.error; if (r.status === 409) loadSlots(); return; }
-    const info = { ...j, date: $('#dt').value, time: pick.time, name: $('#nm').value };
-    cart.clear(); pick = {};
-    go('done', { info }); window.open(j.whatsapp_url, '_blank');
-  };
-}
-
-function done() {
-  const i = view.info, sm = i.summary;
-  $('#app').innerHTML = `<div class="glass box fade" style="text-align:center"><h2>✓ تم حفظ حجزك</h2><p>رقم الحجز: <b>${i.id}</b></p>
-    <p>${esc(i.name)} — ${i.date} — ${i.time}</p>${i.services.map(s => `<div class="row"><span>${esc(s.name)}</span><span>${s.price_type === 'inspection' ? 'بعد المعاينة' : s.price_type === 'fixed' ? money(s.price) : money(s.price_min) + ' – ' + money(s.price_max)}</span></div>`).join('')}
-    <hr><div class="row"><b>الإجمالي الثابت</b><b>${money(sm.fixed)}</b></div>
-    ${sm.min || sm.max ? `<div class="row"><span>تقديري</span><span>${money(sm.min)} – ${money(sm.max)}</span></div>` : ''}
-    ${sm.insp.length ? `<div class="note">تحتاج معاينة: ${esc(sm.insp.join('، '))}</div>` : ''}
-    <p class="note">إذا لم يفتح واتساب تلقائياً اضغطي الزر أدناه لإرسال تفاصيل الحجز.</p>
-    <a class="btn full" target="_blank" href="${esc(i.whatsapp_url)}">فتح واتساب لإرسال الحجز</a>
-    <button class="btn ghost full" style="margin-top:8px" id="h">العودة للرئيسية</button></div>`;
-  $('#h').onclick = () => go('home');
-}
-
-// الدخول المخفي للإدارة: 5 ضغطات متتالية على الشعار
-let clicks = 0, ct;
-$('#logo').onclick = () => { clicks++; clearTimeout(ct); ct = setTimeout(() => clicks = 0, 2000); if (clicks >= 5) { clicks = 0; askPass(); } };
-function askPass() {
-  $('#modal').innerHTML = `<div class="modal"><form class="glass" id="pf"><label>الرقم السري</label><input id="pw" type="password" inputmode="numeric" autofocus>
-    <div class="err" id="pe"></div><button class="btn full">دخول</button><button type="button" class="btn ghost full" style="margin-top:8px" id="px">إلغاء</button></form></div>`;
-  $('#px').onclick = () => $('#modal').innerHTML = '';
-  $('#pf').onsubmit = async e => {
-    e.preventDefault();
-    const r = await fetch('/api/admin/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ password: $('#pw').value }) });
-    const j = await r.json();
-    if (!r.ok) return $('#pe').textContent = j.error;
-    sessionStorage.setItem('tok', j.token); location.href = '/admin.html';
-  };
-}
-load().then(render);
-
-````
-
-## الملف: public/admin.html
-
-````html
-<!doctype html>
-<html lang="ar" dir="rtl">
-<head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="robots" content="noindex"><title>لوحة الإدارة</title>
-<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700&display=swap" rel="stylesheet">
-<style>
-:root{--p:#d9769b;--g:#c9a24b}*{box-sizing:border-box}
-body{margin:0;font-family:'Tajawal',system-ui,sans-serif;background:#fff6f9;color:#4a2b38;padding-bottom:40px}
-header{background:linear-gradient(135deg,var(--p),var(--g));color:#fff;padding:12px 16px;display:flex;justify-content:space-between;align-items:center}
-#tabs{display:flex;gap:6px;overflow-x:auto;padding:10px;background:#fff;position:sticky;top:0;z-index:3;box-shadow:0 2px 8px #0001}
-#tabs button{flex:0 0 auto;border:1px solid var(--p);background:#fff;color:var(--p);border-radius:99px;padding:8px 14px;font:inherit;cursor:pointer}
-#tabs button.on{background:var(--p);color:#fff}
-main{max-width:800px;margin:auto;padding:12px}
-.card{background:#fff;border-radius:16px;padding:14px;margin-bottom:12px;box-shadow:0 4px 14px #7a3c5a1a}
-.btn{border:0;border-radius:10px;padding:9px 14px;font:inherit;background:var(--p);color:#fff;cursor:pointer}
-.btn.ghost{background:#fff;color:var(--p);border:1px solid var(--p)}.btn.red{background:#c0392b}.btn.sm{padding:5px 10px;font-size:13px}
-.bar,.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;justify-content:space-between}
-.f{margin:10px 0}.f span{display:block;font-weight:700;margin-bottom:3px}
-input,select,textarea{width:100%;padding:10px;border:1px solid #e6c9d4;border-radius:10px;font:inherit}
-input[type=checkbox]{width:auto;transform:scale(1.3)}input[type=color]{height:44px;padding:2px}
-.imgf img,.thumb{max-width:100%;max-height:120px;border-radius:10px;display:block;margin-bottom:6px}.thumb{width:56px;height:56px;object-fit:cover}
-.modal{position:fixed;inset:0;background:#2a0f1a99;z-index:10;overflow:auto;padding:16px}.modal .box{background:#fff;border-radius:16px;padding:16px;max-width:460px;margin:auto}
-.tag{font-size:12px;padding:2px 8px;border-radius:99px;background:#eee}.tag.off{background:#fcd}.muted{opacity:.65;font-size:13px}
-</style></head>
-<body>
-<header><b>لوحة إدارة مركز لاڤيرن</b><span><a href="/" style="color:#fff;margin-inline-end:12px">الموقع</a><a href="#" id="out" style="color:#fff">خروج</a></span></header>
-<div id="tabs"></div><main id="main"></main>
-<script>
-const $=s=>document.querySelector(s),T=sessionStorage.getItem('tok');if(!T)location.href='/';
-const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const today=()=>{const d=new Date();return new Date(d-d.getTimezoneOffset()*6e4).toISOString().slice(0,10)};
-async function api(p,m='GET',b){
-  const r=await fetch('/api/admin/'+p,{method:m,headers:{'Content-Type':'application/json',Authorization:'Bearer '+T},body:b?JSON.stringify(b):undefined});
-  if(r.status===401){sessionStorage.removeItem('tok');location.href='/';throw 0}
-  const j=await r.json();if(!r.ok){alert(j.error||'خطأ');throw 0}return j}
-$('#out').onclick=e=>{e.preventDefault();sessionStorage.removeItem('tok');location.href='/'};
-
-// ---- بناء النماذج ----
-function fh(f,v){v=v??'';const n=`name="${f.k}"`;let i;
- if(f.t==='textarea'||f.t==='lines')i=`<textarea ${n} rows="4">${esc(f.t==='lines'&&Array.isArray(v)?v.join('\n'):v)}</textarea>`;
- else if(f.t==='select')i=`<select ${n}>${f.o.map(([a,b])=>`<option value="${a}" ${String(a)===String(v)?'selected':''}>${b}</option>`).join('')}</select>`;
- else if(f.t==='check')i=`<input type="checkbox" ${n} ${+v?'checked':''}>`;
- else if(f.t==='image')i=`<div class="imgf">${v?`<img src="${esc(v)}">`:''}<input type="hidden" ${n} value="${esc(v)}"><input type="file" accept="image/*"> <button type="button" class="btn ghost sm" data-del>حذف الصورة</button></div>`;
- else if(f.t==='color')i=`<input type="color" ${n} value="${v||'#ffffff'}">`;
- else i=`<input type="${f.t||'text'}" ${n} value="${esc(v)}" ${f.t==='number'?'step="any"':''} ${f.ph?`placeholder="${f.ph}"`:''}>`;
- return `<div class="f"><span>${f.l}</span>${i}</div>`}
-function rd(form,fields){const o={};for(const f of fields){const e=form.elements[f.k];let v;
- if(f.t==='check')v=e.checked?1:0;else if(f.t==='number'||f.num)v=e.value===''?null:+e.value;
- else if(f.t==='lines')v=e.value.split('\n').map(x=>x.trim()).filter(Boolean);else v=e.value;o[f.k]=v}return o}
-document.addEventListener('change',async e=>{
- if(e.target.type!=='file')return;const box=e.target.closest('.imgf'),file=e.target.files[0];if(!file)return;
- const fd=new FormData();fd.append('file',file);
- const r=await fetch('/api/admin/upload',{method:'POST',headers:{Authorization:'Bearer '+T},body:fd});
- const j=await r.json();if(!r.ok)return alert(j.error||'فشل الرفع');
- box.querySelector('input[type=hidden]').value=j.url;
- let im=box.querySelector('img');if(!im){im=document.createElement('img');box.prepend(im)}im.src=j.url});
-document.addEventListener('click',e=>{if(e.target.dataset.del!==undefined){const b=e.target.closest('.imgf');b.querySelector('input[type=hidden]').value='';b.querySelector('img')?.remove()}});
-function openForm(title,fields,vals,save){
- const m=document.createElement('div');m.className='modal';
- m.innerHTML=`<form class="box"><h3>${title}</h3>${fields.map(f=>fh(f,vals[f.k])).join('')}<div class="row"><button class="btn">حفظ</button><button type="button" class="btn ghost" id="cx">إلغاء</button></div></form>`;
- document.body.append(m);m.querySelector('#cx').onclick=()=>m.remove();
- m.querySelector('form').onsubmit=async e=>{e.preventDefault();try{await save(rd(e.target,fields));m.remove();show()}catch{}}}
-const ptypes=[['fixed','سعر ثابت'],['variable','سعر متغير (أقل وأعلى)'],['inspection','السعر يحدد بعد المعاينة']];
-const F={
- cat:[{k:'name',l:'اسم القسم'},{k:'poster',l:'بوستر القسم (صورة كاملة)',t:'image'},{k:'sort',l:'الترتيب',t:'number'},{k:'capacity',l:'عدد الحجوزات المتزامنة المسموحة',t:'number'},{k:'active',l:'مفعّل',t:'check'}],
- svc:[{k:'name',l:'اسم الخدمة'},{k:'image',l:'صورة الخدمة',t:'image'},{k:'description',l:'الوصف',t:'textarea'},{k:'includes',l:'ما تشمله الخدمة (كل بند في سطر)',t:'textarea'},{k:'price_type',l:'نوع السعر',t:'select',o:ptypes},{k:'price',l:'السعر الثابت (د.ل)',t:'number'},{k:'price_min',l:'أقل سعر',t:'number'},{k:'price_max',l:'أعلى سعر',t:'number'},{k:'sort',l:'الترتيب',t:'number'},{k:'active',l:'مفعّلة',t:'check'}],
- off:[{k:'title',l:'عنوان العرض'},{k:'image',l:'صورة العرض',t:'image'},{k:'description',l:'الوصف',t:'textarea'},{k:'old_price',l:'السعر قبل الخصم',t:'number'},{k:'new_price',l:'السعر بعد الخصم',t:'number'},{k:'start_date',l:'تاريخ البداية',t:'date'},{k:'end_date',l:'تاريخ النهاية',t:'date'},{k:'active',l:'مفعّل',t:'check'}],
- look:[{k:'hero_text',l:'العبارة الرئيسية'},{k:'logo',l:'الشعار',t:'image'},{k:'bg_image',l:'صورة الخلفية',t:'image'},{k:'color_primary',l:'اللون الأساسي (وردي)',t:'color'},{k:'color_gold',l:'اللون الذهبي',t:'color'},{k:'color_bg',l:'لون الخلفية',t:'color'}],
- info:[{k:'name_ar',l:'اسم المركز'},{k:'name_en',l:'الاسم بالإنجليزية'},{k:'owner',l:'اسم المسؤولة'},{k:'whatsapp',l:'رقم واتساب (بصيغة دولية بدون +)'},{k:'phones',l:'أرقام الهاتف (كل رقم في سطر)',t:'lines'},{k:'website',l:'رابط الموقع'},{k:'address',l:'العنوان'},{k:'hours',l:'ساعات العمل (نص يظهر للزبائن)'},{k:'open_time',l:'بداية استقبال الحجوزات',t:'time'},{k:'close_time',l:'نهاية استقبال الحجوزات',t:'time'},{k:'slot_minutes',l:'مدة الموعد بالدقائق',t:'number'},{k:'admin_password',l:'رقم سري جديد (اتركيه فارغاً بدون تغيير)',ph:'اتركه فارغاً'}]};
-
-// ---- التبويبات ----
-const TABS=[['bookings','الحجوزات'],['services','الأقسام والخدمات'],['offers','العروض'],['sched','المواعيد'],['look','المظهر'],['info','معلومات المركز']];
-let tab='bookings',R={};
-function show(){$('#tabs').innerHTML=TABS.map(([k,l])=>`<button class="${k===tab?'on':''}" data-t="${k}">${l}</button>`).join('');R[tab]()}
-$('#tabs').onclick=e=>{if(e.target.dataset.t){tab=e.target.dataset.t;show()}};
-const money=n=>(n||0)+' د.ل';
-const bar=(id,label)=>`<div class="bar" style="margin-bottom:12px"><button class="btn" id="${id}">${label}</button></div>`;
-
-let bdate=today();
-R.bookings=async()=>{
- $('#main').innerHTML=`<div class="card bar"><input type="date" id="bd" value="${bdate||''}" style="width:auto"><button class="btn ghost sm" id="all">كل الحجوزات القادمة</button></div><div id="bl">...</div>`;
- $('#bd').onchange=e=>{bdate=e.target.value;R.bookings()};$('#all').onclick=()=>{bdate='';R.bookings()};
- const list=await api('bookings'+(bdate?'?date='+bdate:''));
- const busy=list.filter(b=>b.status==='active').map(b=>b.time);
- $('#bl').innerHTML=(bdate&&busy.length?`<p class="muted">الأوقات المشغولة: ${[...new Set(busy)].join(' · ')}</p>`:'')+
- (list.map(b=>`<div class="card"><div class="row"><b>${b.date} — ${b.time}</b><span class="tag ${b.status==='active'?'':'off'}">${b.status==='active'?'نشط':'ملغي'}</span></div>
-  <div>${esc(b.name)} — <a href="tel:${esc(b.phone)}">${esc(b.phone)}</a></div>
-  <div class="muted">${b.services.map(s=>esc(s.name)).join('، ')}</div>
-  <div>الثابت: ${money(b.total_fixed)}${b.total_max?` · تقديري: ${b.total_min}-${b.total_max}`:''}${b.inspection.length?` · معاينة: ${esc(b.inspection.join('، '))}`:''}</div>
-  ${b.status==='active'?`<button class="btn red sm" data-cancel="${b.id}" style="margin-top:8px">إلغاء الحجز</button>`:''}</div>`).join('')||'<p>لا توجد حجوزات</p>');
- document.querySelectorAll('[data-cancel]').forEach(x=>x.onclick=async()=>{if(confirm('إلغاء هذا الحجز؟')){await api(`bookings/${x.dataset.cancel}/cancel`,'PUT');R.bookings()}});
-};
-
-R.services=async()=>{
- const [cats,svs]=await Promise.all([api('categories'),api('services')]);
- $('#main').innerHTML=bar('addc','+ إضافة قسم')+cats.map(c=>`<div class="card"><div class="row"><div class="row">${c.poster?`<img class="thumb" src="${esc(c.poster)}">`:''}<b>${esc(c.name)}</b>${c.active?'':'<span class="tag off">موقوف</span>'}</div>
-  <div><button class="btn ghost sm" data-ec="${c.id}">تعديل</button> <button class="btn red sm" data-dc="${c.id}">حذف</button></div></div>
-  <div style="margin:10px 0"><button class="btn sm" data-as="${c.id}">+ إضافة خدمة</button></div>
-  ${svs.filter(s=>s.category_id===c.id).map(s=>`<div class="row" style="border-top:1px solid #f2dde5;padding:8px 0"><div>${esc(s.name)} ${s.active?'':'<span class="tag off">موقوفة</span>'}<div class="muted">${s.price_type==='fixed'?money(s.price):s.price_type==='variable'?`${s.price_min}-${s.price_max} د.ل`:'بعد المعاينة'}</div></div>
-  <div><button class="btn ghost sm" data-es="${s.id}">تعديل</button> <button class="btn red sm" data-ds="${s.id}">حذف</button></div></div>`).join('')}</div>`).join('');
- $('#addc').onclick=()=>openForm('إضافة قسم',F.cat,{sort:cats.length,capacity:1,active:1},v=>api('categories','POST',v));
- const q=(a,fn)=>document.querySelectorAll(`[data-${a}]`).forEach(b=>b.onclick=()=>fn(+b.dataset[a]));
- q('ec',id=>openForm('تعديل القسم',F.cat,cats.find(c=>c.id===id),v=>api('categories/'+id,'PUT',v)));
- q('dc',async id=>{if(confirm('حذف القسم وكل خدماته نهائياً؟')){await api('categories/'+id,'DELETE');show()}});
- q('as',id=>openForm('إضافة خدمة',F.svc,{price_type:'inspection',active:1,sort:99},v=>api('services','POST',{...v,category_id:id})));
- q('es',id=>openForm('تعديل الخدمة',F.svc,svs.find(s=>s.id===id),v=>api('services/'+id,'PUT',v)));
- q('ds',async id=>{if(confirm('حذف الخدمة؟')){await api('services/'+id,'DELETE');show()}});
-};
-
-R.offers=async()=>{
- const list=await api('offers');
- $('#main').innerHTML=bar('ao','+ إضافة عرض')+list.map(o=>`<div class="card"><div class="row"><div class="row">${o.image?`<img class="thumb" src="${esc(o.image)}">`:''}<div><b>${esc(o.title)}</b><div class="muted">${o.old_price||''} ← ${o.new_price||''} · ${o.start_date||'—'} إلى ${o.end_date||'—'}</div></div></div><span class="tag ${o.active?'':'off'}">${o.active?'مفعّل':'موقوف'}</span></div>
-  <div style="margin-top:8px"><button class="btn ghost sm" data-eo="${o.id}">تعديل / إيقاف</button> <button class="btn red sm" data-do="${o.id}">حذف</button></div></div>`).join('')||'<p>لا توجد عروض. العروض المنتهية تختفي تلقائياً من الموقع.</p>';
- $('#ao').onclick=()=>openForm('إضافة عرض',F.off,{active:1},v=>api('offers','POST',v));
- document.querySelectorAll('[data-eo]').forEach(b=>b.onclick=()=>openForm('تعديل العرض',F.off,list.find(o=>o.id===+b.dataset.eo),v=>api('offers/'+b.dataset.eo,'PUT',v)));
- document.querySelectorAll('[data-do]').forEach(b=>b.onclick=async()=>{if(confirm('حذف العرض؟')){await api('offers/'+b.dataset.do,'DELETE');show()}});
-};
-
-R.sched=async()=>{
- const [cats,cl]=await Promise.all([api('categories'),api('closures')]);
- const name=id=>id?(cats.find(c=>c.id===id)||{}).name:'كل الأقسام';
- $('#main').innerHTML=`<div class="card"><b>عدد الحجوزات المتزامنة لكل قسم</b>${cats.map(c=>`<div class="row" style="margin-top:8px"><span>${esc(c.name)}</span><input type="number" min="1" value="${c.capacity}" data-cap="${c.id}" style="width:80px"></div>`).join('')}</div>
- ${bar('ac','+ إغلاق وقت / يوم / فترة')}${cl.map(c=>`<div class="card row"><div>${c.date} — ${c.start_time?`${c.start_time} إلى ${c.end_time||'النهاية'}`:'يوم كامل'}<div class="muted">${esc(name(c.category_id))} ${esc(c.note)}</div></div><button class="btn sm" data-oc="${c.id}">فتح الوقت</button></div>`).join('')||'<p class="muted">لا توجد أوقات مغلقة</p>'}`;
- document.querySelectorAll('[data-cap]').forEach(i=>i.onchange=()=>api('categories/'+i.dataset.cap,'PUT',{capacity:Math.max(1,+i.value||1)}));
- document.querySelectorAll('[data-oc]').forEach(b=>b.onclick=async()=>{await api('closures/'+b.dataset.oc,'DELETE');show()});
- $('#ac').onclick=()=>openForm('إغلاق وقت',[{k:'date',l:'التاريخ',t:'date'},{k:'start_time',l:'من الساعة (اتركيه فارغاً لإغلاق اليوم كاملاً)',t:'time'},{k:'end_time',l:'إلى الساعة',t:'time'},{k:'category_id',l:'القسم',t:'select',num:1,o:[['','كل الأقسام'],...cats.map(c=>[c.id,c.name])]},{k:'note',l:'ملاحظة'}],{date:today()},v=>{if(!v.date){alert('اختاري التاريخ');throw 0}return api('closures','POST',v)});
-};
-
-function settingsTab(fields){return async()=>{
- const s=await api('settings');
- $('#main').innerHTML=`<form class="card" id="sf">${fields.map(f=>fh(f,f.k==='admin_password'?'':s[f.k])).join('')}<button class="btn">حفظ</button></form>`;
- $('#sf').onsubmit=async e=>{e.preventDefault();await api('settings','PUT',rd(e.target,fields));alert('تم الحفظ');show()}}}
-R.look=settingsTab(F.look);R.info=settingsTab(F.info);
-show();
-</script></body></html>
-
-````
