@@ -130,7 +130,7 @@ footer a{color:inherit}
 <div id="toast" hidden></div>
 
 <script>
-var API="https://script.google.com/macros/s/AKfycbyGwx8OqLE6_tUJXLWzpwaEvN-vRatSP-R4CpychGSzcfA76ek1jVBRHFkyE2Re3USW/exec";
+var API="https://script.google.com/macros/s/AKfycbyYL5Ea_R9r7Bwm0n2vniJRjZFYT1lxX5THzQ5eQy-89GLed8you5mxhXeSQ6VsQcl2/exec";
 var T={
 night:{bg:'#0e0d0b',sf:'#171512',ink:'#f3ece0',mu:'#b3a894',ac:'#d2b074',ai:'#14110d',ln:'#2c2820'},
 ivory:{bg:'#f4efe7',sf:'#fbf8f2',ink:'#17130f',mu:'#6f6659',ac:'#8c6c2c',ai:'#ffffff',ln:'#ddd2bf'},
@@ -148,6 +148,12 @@ function hr(t,a,c){var e=document.createElement(t);a=a||{};for(var k in a){if(k=
 function pad(n){return(n<10?'0':'')+n}
 function lbl(n){return(n>12?n-12:n)+':00 '+(n<12?'ص':'م')}
 function money(n){return Number(n).toLocaleString('en-US')+' د.ل'}
+
+function priceText(it){
+ if(it.pt==='range') return money(it.min)+' - '+money(it.max);
+ if(it.pt==='visit') return 'السعر بعد المعاينة';
+ return money(it.p);
+}
 function iso(d){return new Date(d.getTime()-d.getTimezoneOffset()*6e4).toISOString().slice(0,10)}
 function toast(m){var t=$('toast');t.textContent=m;t.hidden=false;setTimeout(function(){t.hidden=true},2600)}
 function post(o){return fetch(API,{method:'POST',body:JSON.stringify(o)}).then(function(r){return r.json()})}
@@ -161,15 +167,64 @@ function secs(){var L=$('secs');L.innerHTML='';C.sections.forEach(function(s,si)
   var b=hr('button',{type:'button',class:'add','aria-pressed':!!sel[k],t:sel[k]?'تمت الإضافة':'أضيفي للحجز'});
   b.onclick=function(){if(sel[k])delete sel[k];else sel[k]=1;secs();sum()};
   kids.push(hr('div',{class:'mid'},[hr('h3',{t:it.n}),hr('small',{t:it.d||''}),hr('div',{},[b])]));
-  kids.push(hr('div',{class:'price',t:money(it.p)}));
+  kids.push(hr('div',{class:'price',t:priceText(it)}));
   w.appendChild(hr('div',{class:'svc'},kids))});
  L.appendChild(w)})}
-function chosen(){var n=[],t=0;Object.keys(sel).forEach(function(k){var a=k.split('.'),s=C.sections[a[0]],it=s&&s.items[a[1]];if(it){n.push(it.n);t+=Number(it.p)}});return{n:n,t:t}}
-function sum(){var u=$('sl');u.innerHTML='';var c=chosen();
- if(!c.n.length)u.appendChild(hr('li',{t:'لم تختاري خدمة بعد.'}));
- Object.keys(sel).forEach(function(k){var a=k.split('.'),s=C.sections[a[0]],it=s&&s.items[a[1]];if(it)u.appendChild(hr('li',{},[hr('span',{t:it.n}),hr('span',{t:money(it.p)})]))});
- $('tot').textContent=money(c.t)}
-function slots(){var d=$('date').value,L=$('slots');L.innerHTML='';var now=new Date();
+ function chosen(){
+ var n=[],t=0,min=0,max=0,hasRange=false,hasVisit=false;
+
+ Object.keys(sel).forEach(function(k){
+  var a=k.split('.'),s=C.sections[a[0]],it=s&&s.items[a[1]];
+  if(!it)return;
+
+  n.push(it.n);
+
+  if(it.pt==='visit'){
+   hasVisit=true;
+  }else if(it.pt==='range'){
+   hasRange=true;
+   min+=Number(it.min)||0;
+   max+=Number(it.max)||0;
+  }else{
+   var p=Number(it.p)||0;
+   t+=p;
+   min+=p;
+   max+=p;
+  }
+ });
+
+ var totalText=hasVisit?'يحدد بعد المعاينة':
+ hasRange?money(min)+' - '+money(max):money(t);
+
+ return{
+  n:n,t:t,min:min,max:max,
+  hasRange:hasRange,hasVisit:hasVisit,
+  totalText:totalText
+ };
+}
+
+function sum(){
+ var u=$('sl');
+ u.innerHTML='';
+ var c=chosen();
+
+ if(!c.n.length){
+  u.appendChild(hr('li',{t:'لم تختاري خدمة بعد.'}));
+ }
+
+ Object.keys(sel).forEach(function(k){
+  var a=k.split('.'),s=C.sections[a[0]],it=s&&s.items[a[1]];
+
+  if(it){
+   u.appendChild(hr('li',{},[
+    hr('span',{t:it.n}),
+    hr('span',{t:priceText(it)})
+   ]));
+  }
+ });
+
+ $('tot').textContent=c.totalText;
+}
  for(var h=C.open;h<C.close;h++){var t=pad(h)+':00',b=hr('button',{type:'button',class:'slot',t:lbl(h)});
   if((B[d]||[]).indexOf(t)>=0){b.textContent+=' (محجوز)';b.disabled=true}
   else if(d===iso(now)&&h<=now.getHours())b.disabled=true;
@@ -189,14 +244,14 @@ $('bk').onclick=function(){
  if(n.length<2){e.textContent='اكتبي اسمك.';return}
  if(!/^[0-9٠-٩+\s]{8,15}$/.test(p)){e.textContent='اكتبي رقم موبايل صحيح.';return}
  e.textContent='';
- var msg='حجز جديد\nالاسم: '+n+'\nالموبايل: '+p+'\nالخدمات: '+c.n.join('، ')+'\nاليوم: '+d+'\nالوقت: '+slot+'\nالإجمالي: '+c.t+' د.ل';
+ var msg='حجز جديد\nالاسم: '+n+'\nالموبايل: '+p+'\nالخدمات: '+c.n.join('، ')+'\nاليوم: '+d+'\nالوقت: '+slot+'\nالإجمالي: '+c.totalText;
  function fin(ok){$('form').hidden=true;$('sc').hidden=true;$('done').hidden=false;
   $('dt').textContent=ok?'تم حجز موعدك':'تم تجهيز طلبك';
   $('dx').textContent=ok?(n+'، موعدك يوم '+d+' الساعة '+slot+'. نراك قريبًا.'):'أرسلي التفاصيل على واتساب لتأكيد الموعد.';
   $('dw').href='https://wa.me/'+C.wa+'?text='+encodeURIComponent(msg);$('fc').scrollIntoView()}
  if(!API){fin(false);return}
  $('bk').disabled=true;
- post({a:'book',date:d,time:slot,name:n,phone:p,svc:c.n.join('، '),total:c.t}).then(function(r){
+ post({a:'book',date:d,time:slot,name:n,phone:p,svc:c.n.join('، '),total:(c.hasVisit||c.hasRange)?0:c.t,totalText:c.totalText}).then(function(r){
   $('bk').disabled=false;
   if(r.ok){(B[d]=B[d]||[]).push(slot);fin(true)}
   else{if(r.booked)B=r.booked;slot='';slots();e.textContent=r.err==='taken'?'هذا الوقت انحجز للتو. اختاري وقتًا آخر.':'تعذر الحجز. حاولي مرة ثانية.'}
@@ -223,25 +278,121 @@ $('asave').onclick=function(){post({a:'save',pin:PIN,cfg:C}).then(function(r){to
 function rs(f,cb){var r=new FileReader();r.onload=function(){var im=new Image();im.onload=function(){var k=Math.min(1,700/Math.max(im.width,im.height)),c=document.createElement('canvas');c.width=im.width*k;c.height=im.height*k;c.getContext('2d').drawImage(im,0,0,c.width,c.height);cb(c.toDataURL('image/jpeg',0.75))};im.src=r.result};r.readAsDataURL(f)}
 function up(f,cb){toast('جاري رفع الصورة...');rs(f,function(d){post({a:'upload',pin:PIN,data:d.split(',')[1]}).then(function(r){if(r.ok){cb(r.url);toast('تم رفع الصورة. لا تنسي الحفظ.')}else toast('تعذر رفع الصورة')}).catch(function(){toast('تعذر الاتصال')})})}
 function inp(v,ph,fn,type){var i=hr('input',{placeholder:ph,type:type||'text'});i.value=v==null?'':v;i.oninput=function(){fn(i.value)};return i}
-function aS(){var P=$('p0');P.innerHTML='';
+
+function aS(){
+ var P=$('p0');
+ P.innerHTML='';
+
  C.sections.forEach(function(s,si){
   var box=hr('div',{class:'card'});
-  var dl=hr('button',{type:'button',class:'add',t:'حذف القسم'});dl.onclick=two(dl,function(){C.sections.splice(si,1);sel={};aS()});
-  box.appendChild(hr('div',{class:'ar'},[inp(s.t,'اسم القسم',function(v){s.t=v}),dl]));
+
+  var dl=hr('button',{type:'button',class:'add',t:'حذف القسم'});
+  dl.onclick=two(dl,function(){
+   C.sections.splice(si,1);
+   sel={};
+   aS();
+  });
+
+  box.appendChild(hr('div',{class:'ar'},[
+   inp(s.t,'اسم القسم',function(v){s.t=v}),
+   dl
+  ]));
+
   s.items.forEach(function(it,ii){
-   var im=hr('div',{class:'th'});if(it.i)im.style.backgroundImage='url('+it.i+')';
+   var im=hr('div',{class:'th'});
+   if(it.i)im.style.backgroundImage='url('+it.i+')';
+
+   var x=hr('button',{type:'button',class:'add full',t:'حذف الصنف'});
+   x.onclick=two(x,function(){
+    s.items.splice(ii,1);
+    sel={};
+    aS();
+   });
+
+   var rm=hr('button',{type:'button',class:'add full',t:'إزالة الصورة'});
+   rm.onclick=function(){
+    it.i='';
+    im.style.backgroundImage='none';
+   };
+
+   var nm=inp(it.n,'اسم الخدمة',function(v){it.n=v});
+   nm.className='full';
+
+   it.pt=it.pt||'fixed';
+
+   var pt=hr('select');
+   [
+    {v:'fixed',t:'سعر ثابت'},
+    {v:'range',t:'سعر من مبلغ إلى مبلغ'},
+    {v:'visit',t:'السعر بعد المعاينة'}
+   ].forEach(function(o){
+    pt.appendChild(hr('option',{value:o.v,t:o.t}));
+   });
+
+   pt.value=it.pt;
+   pt.onchange=function(){
+    it.pt=pt.value;
+    aS();
+   };
+
+   var fields=[im,nm,pt];
+
+   if(it.pt==='fixed'){
+    var pr=inp(it.p,'السعر بالدينار',function(v){
+     it.p=Number(v)||0;
+    },'number');
+    fields.push(pr);
+   }
+
+   if(it.pt==='range'){
+    var mn=inp(it.min,'أقل سعر بالدينار',function(v){
+     it.min=Number(v)||0;
+    },'number');
+
+    var mx=inp(it.max,'أعلى سعر بالدينار',function(v){
+     it.max=Number(v)||0;
+    },'number');
+
+    fields.push(mn,mx);
+   }
+
+   if(it.pt==='visit'){
+    fields.push(hr('p',{class:'sub',t:'السعر النهائي يتحدد بعد معاينة الشعر.'}));
+   }
+
+   var du=inp(it.d,'المدة',function(v){it.d=v});
+
    var f=hr('input',{type:'file',accept:'image/*',class:'full'});
-   f.onchange=function(){if(f.files[0])up(f.files[0],function(u){it.i=u;im.style.backgroundImage='url('+u+')'})};
-   var x=hr('button',{type:'button',class:'add full',t:'حذف الصنف'});x.onclick=two(x,function(){s.items.splice(ii,1);sel={};aS()});
-   var rm=hr('button',{type:'button',class:'add full',t:'إزالة الصورة'});rm.onclick=function(){it.i='';im.style.backgroundImage='none'};
-   var nm=inp(it.n,'اسم الصنف',function(v){it.n=v});nm.className='full';
-   var pr=inp(it.p,'السعر (د.ل)',function(v){it.p=Number(v)||0},'number');pr.className='full';
-   var du=inp(it.d,'المدة',function(v){it.d=v});du.className='full';
-   box.appendChild(hr('div',{class:'item'},[im,nm,pr,du,f,rm,x]))});
-  var ad=hr('button',{type:'button',class:'btn alt',t:'+ إضافة صنف'});ad.onclick=function(){s.items.push({n:'',d:'',p:0,i:''});aS()};
-  box.appendChild(ad);P.appendChild(box)});
- var as=hr('button',{type:'button',class:'btn',t:'+ إضافة قسم جديد'});as.onclick=function(){C.sections.push({t:'قسم جديد',items:[]});aS()};P.appendChild(as)}
-function aT(){var P=$('p1');P.innerHTML='';
+   f.onchange=function(){
+    if(f.files[0])up(f.files[0],function(u){
+     it.i=u;
+     im.style.backgroundImage='url('+u+')';
+    });
+   };
+
+   fields.push(du,f,rm,x);
+   box.appendChild(hr('div',{class:'item'},fields));
+  });
+
+  var ad=hr('button',{type:'button',class:'btn alt',t:'+ إضافة صنف'});
+  ad.onclick=function(){
+   s.items.push({n:'',d:'',p:0,i:'',pt:'fixed',min:0,max:0});
+   aS();
+  };
+
+  box.appendChild(ad);
+  P.appendChild(box);
+ });
+
+ var as=hr('button',{type:'button',class:'btn',t:'+ إضافة قسم جديد'});
+ as.onclick=function(){
+  C.sections.push({t:'قسم جديد',items:[]});
+  aS();
+ };
+
+ P.appendChild(as);
+}
+
  var sl=hr('select');Object.keys(TN).forEach(function(k){var o=hr('option',{value:k,t:TN[k]});if(k===C.theme)o.selected=true;sl.appendChild(o)});
  sl.onchange=function(){C.theme=sl.value;theme()};
  var f=hr('input',{type:'file',accept:'image/*'});f.onchange=function(){if(f.files[0])up(f.files[0],function(u){C.bgimg=u;theme()})};
@@ -275,7 +426,10 @@ function aM2(){var Lw=$('bl');if(!Lw)return;Lw.innerHTML='';
  ROWS.slice().reverse().forEach(function(r){
   var c=hr('button',{type:'button',class:'add',t:'إلغاء'});
   c.onclick=two(c,function(){post({a:'unblock',pin:PIN,date:r.d,time:r.t}).then(function(x){if(x.ok){var a=B[r.d]||[];a.splice(a.indexOf(r.t),1);ROWS=ROWS.filter(function(y){return y!==r});aM2()}}).catch(function(){toast('تعذر الاتصال')})});
-  Lw.appendChild(hr('div',{class:'ar'},[hr('span',{t:r.d+' · '+r.t+' · '+r.n+(r.p?' · '+r.p:'')+(r.s?' · '+r.s:'')}),c]))})}
+  Lw.appendChild(hr('div',{class:'ar'},[
+ hr('span',{t:r.d+' · '+r.t+' · '+r.n+(r.totalText?' · '+r.totalText:(r.p?' · '+r.p+' د.ل':''))+(r.s?' · '+r.s:'')}),
+ c
+]))
 
 render();
 if(API){fetch(API+'?a=data').then(function(r){return r.json()}).then(function(d){if(d.cfg&&d.cfg.sections)C=Object.assign({},DEF,d.cfg);B=d.booked||{};render()}).catch(function(){})}
