@@ -1,702 +1,901 @@
+
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>مركز لاڤيرن | Laverne Center</title>
-<link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Cormorant+Garamond:wght@600;700&family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>مركز لاڤيرن | LAVERNE CENTER</title>
+<link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Cairo:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
 <style>
+:root{
+ --pink:#d99aaf;
+ --pink2:#f0c8d5;
+ --gold:#c6a46a;
+ --bg:#171419;
+ --card:#211d23;
+ --text:#fff8f5;
+ --muted:#b9adb3;
+ --line:rgba(255,255,255,.1);
+}
 *{box-sizing:border-box}
-:root{--bg:#0e0d0b;--sf:#171512;--ink:#f3ece0;--mu:#b3a894;--ac:#d2b074;--ai:#14110d;--ln:#2c2820}
-[hidden]{display:none!important}
-html{scroll-behavior:smooth}
-body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.8 Tajawal,Tahoma,sans-serif;padding-top:env(safe-area-inset-top,0)}
-#bgi{position:fixed;inset:0;z-index:-1;background:center/cover;opacity:.22}
-.wrap{max-width:960px;margin:0 auto;padding:0 20px}
-h1,h2,h3{font-family:Amiri,serif;margin:0;line-height:1.35}
-header{display:flex;justify-content:space-between;align-items:center;padding:18px 0}
-.logo{display:flex;flex-direction:column;line-height:1.25;cursor:pointer;user-select:none}
-#lga{font:700 1.45rem Amiri,serif}
-.logo small{font:600 .78rem 'Cormorant Garamond',serif;letter-spacing:.3em;color:var(--ac)}
-#blk .card p{margin:8px 0 0;white-space:pre-line;color:var(--mu)}
-.btn{border:0;border-radius:2px;background:var(--ac);color:var(--ai);padding:12px 26px;font:700 1rem Tajawal,sans-serif;cursor:pointer;text-decoration:none;display:inline-block}
-.btn.alt{background:transparent;color:var(--ink);border:1.5px solid var(--ac)}
-:focus-visible{outline:3px solid var(--ac);outline-offset:2px}
-.hero{padding:40px 0 56px;border-bottom:1px solid var(--ln)}
-.kick{font:600 .9rem 'Cormorant Garamond',serif;letter-spacing:.42em;color:var(--ac);margin-bottom:14px}
-.hero h1{font-size:clamp(2.3rem,9vw,4.2rem)}
-.hero p{color:var(--mu);max-width:34ch;font-size:1.1rem;margin:18px 0 26px}
-.row{display:flex;gap:12px;flex-wrap:wrap}
-section{padding:36px 0}
-h2{font-size:1.9rem}
-h2::after{content:"";display:block;width:56px;height:1px;background:var(--ac);margin:10px 0 4px}
-.sub{color:var(--mu);margin:0 0 18px}
-.svc{display:flex;gap:14px;align-items:center;padding:16px 0;border-bottom:1px solid var(--ln)}
-.mid{flex:1}.mid h3{font-size:1.2rem}.mid small{color:var(--mu)}
-.th{flex:none;width:76px;height:76px;background:var(--ln) center/cover;border-radius:2px;outline:1px solid var(--ac);outline-offset:3px}
-.price{font:600 1.3rem 'Cormorant Garamond',serif;color:var(--ac);white-space:nowrap}
-.add,.slot,.tab{border:1.5px solid var(--ac);color:var(--ac);background:transparent;border-radius:2px;padding:6px 16px;font:500 .95rem Tajawal,sans-serif;cursor:pointer}
-.add{margin-top:6px}
-.add[aria-pressed=true],.slot[aria-pressed=true],.tab[aria-selected=true]{background:var(--ac);color:var(--ai)}
-.slot{color:var(--ink);border-color:var(--ln)}
-.slot:disabled{opacity:.35;cursor:not-allowed;text-decoration:line-through}
-.card{background:var(--sf);border:1px solid var(--ln);border-radius:4px;padding:20px;margin-bottom:14px}
-.grid{display:grid;gap:16px}
-@media(min-width:760px){.grid{grid-template-columns:1.2fr 1fr}}
-label{display:block;font-weight:500;margin:12px 0 6px}
-input,select,textarea{width:100%;padding:11px 13px;border:1.5px solid var(--ln);border-radius:4px;background:var(--bg);color:var(--ink);font:1rem Tajawal,sans-serif}
-.slots{display:grid;grid-template-columns:repeat(auto-fill,minmax(88px,1fr));gap:8px}
-ul{list-style:none;margin:0;padding:0}li{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px dashed var(--ln)}
-.tot{display:flex;justify-content:space-between;font-weight:700;font-size:1.2rem;margin:14px 0}
-.err{color:#e0675d;min-height:1.6em;margin:8px 0 0}
-footer{padding:36px 0 90px;color:var(--mu);border-top:1px solid var(--ln)}
-footer a{color:inherit}
-#wab{position:fixed;bottom:calc(18px + env(safe-area-inset-bottom,0px));left:18px;z-index:30;border-radius:999px;box-shadow:0 4px 16px rgba(0,0,0,.35)}
-.ov{position:fixed;inset:0;z-index:60;overflow:auto;background:var(--bg);padding:calc(16px + env(safe-area-inset-top,0px)) 16px 90px}
-#pin{background:rgba(0,0,0,.75);display:flex;align-items:center;justify-content:center}
-#pin .card{width:100%;max-width:340px}
-.tabs{display:flex;gap:8px;margin:12px 0;overflow-x:auto}
-.ah{display:flex;justify-content:space-between;align-items:center}
-.item{display:flex;flex-direction:column;align-items:stretch;gap:8px;padding:14px 0;border-bottom:1px solid var(--ln)}
-.item .th{align-self:flex-start}
-.ar{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--ln)}
-#sv{position:fixed;bottom:0;inset-inline:0;z-index:70;padding:12px 16px calc(12px + env(safe-area-inset-bottom,0px));background:var(--sf);border-top:1px solid var(--ac)}
-#sv .btn{width:100%}
-#toast{position:fixed;top:calc(14px + env(safe-area-inset-top,0px));inset-inline:16px;z-index:90;background:var(--ac);color:var(--ai);padding:10px 16px;text-align:center;font-weight:700}
+body{
+ margin:0;
+ font-family:'Cairo',sans-serif;
+ background:var(--bg);
+ color:var(--text);
+}
+button,input,textarea,select{font-family:inherit}
+button{cursor:pointer}
+.container{width:min(1100px,92%);margin:auto}
+header{
+ padding:22px 0;
+ border-bottom:1px solid var(--line);
+ background:rgba(20,17,21,.9);
+}
+.head{
+ display:flex;align-items:center;justify-content:space-between;
+ gap:15px;flex-wrap:wrap;
+}
+.logo{font-family:'Amiri',serif;font-size:29px;color:var(--gold)}
+.logo small{display:block;font-family:'Cairo';font-size:10px;letter-spacing:4px;color:var(--pink)}
+.admin-btn{
+ background:transparent;color:var(--gold);
+ border:1px solid var(--gold);padding:8px 15px;border-radius:25px;
+}
+.hero{
+ min-height:350px;
+ display:flex;align-items:center;justify-content:center;text-align:center;
+ padding:55px 15px;
+ background:
+ linear-gradient(rgba(20,15,20,.65),rgba(20,15,20,.9)),
+ var(--hero-image,linear-gradient(135deg,#39232e,#171419));
+ background-size:cover;background-position:center;
+}
+.hero h1{
+ font-family:'Amiri',serif;font-size:clamp(35px,7vw,60px);
+ color:var(--pink2);margin:0 0 10px;
+}
+.hero p{color:#f1e5e9;max-width:650px;margin:10px auto;line-height:2}
+.gold-line{width:75px;height:2px;background:var(--gold);margin:20px auto}
+.section{padding:45px 0}
+.section-title{text-align:center;margin-bottom:30px}
+.section-title h2{
+ font-family:'Amiri',serif;color:var(--gold);font-size:32px;margin:0;
+}
+.section-title p{color:var(--muted);font-size:13px}
+.services-grid{
+ display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:18px;
+}
+.category{
+ background:var(--card);border:1px solid var(--line);
+ border-radius:17px;padding:20px;
+}
+.category h3{color:var(--pink2);font-size:20px;margin:0 0 15px}
+.service{
+ display:flex;align-items:center;gap:12px;
+ padding:12px 0;border-top:1px solid var(--line);
+}
+.service img{width:58px;height:58px;object-fit:cover;border-radius:10px}
+.service-info{flex:1;min-width:0}
+.service-info strong{display:block;font-size:14px}
+.service-info small{color:var(--gold)}
+.service input{accent-color:var(--pink);width:19px;height:19px}
+.booking{
+ max-width:760px;margin:auto;background:var(--card);
+ border:1px solid var(--line);border-radius:20px;padding:25px;
+}
+.field{margin-bottom:17px}
+.field label{display:block;margin-bottom:7px;color:var(--pink2);font-size:14px}
+.field input,.field textarea,.field select{
+ width:100%;padding:13px;border-radius:10px;
+ border:1px solid var(--line);background:#171419;color:white;
+ outline:none;font-size:15px;
+}
+.field input:focus,.field textarea:focus{border-color:var(--gold)}
+.total{
+ display:flex;justify-content:space-between;
+ padding:17px 0;border-top:1px solid var(--line);
+ color:var(--gold);font-weight:800;font-size:18px;
+}
+.primary{
+ width:100%;border:0;border-radius:12px;padding:14px;
+ background:linear-gradient(120deg,var(--pink),var(--gold));
+ color:#24191d;font-weight:800;font-size:16px;
+}
+.primary:disabled{opacity:.5;cursor:not-allowed}
+.slots{display:grid;grid-template-columns:repeat(4,1fr);gap:9px}
+.slot{
+ padding:10px 5px;border:1px solid var(--line);
+ background:#171419;color:white;border-radius:9px;
+}
+.slot.selected{background:var(--gold);color:#21191b;border-color:var(--gold)}
+.slot:disabled{opacity:.25;cursor:not-allowed;text-decoration:line-through}
+.empty{color:var(--muted);text-align:center;padding:15px}
+.extra-block{
+ background:var(--card);border:1px solid var(--line);
+ padding:20px;border-radius:15px;margin:15px 0;
+}
+footer{
+ border-top:1px solid var(--line);padding:30px 15px;
+ text-align:center;color:var(--muted);font-size:13px;line-height:2;
+}
+.wa{
+ position:fixed;bottom:20px;left:18px;
+ background:#25d366;color:white;text-decoration:none;
+ padding:12px 18px;border-radius:30px;font-weight:700;
+ box-shadow:0 5px 20px #0005;z-index:5;
+}
+.toast{
+ position:fixed;bottom:80px;left:50%;transform:translateX(-50%);
+ background:#29232a;color:white;padding:12px 20px;
+ border:1px solid var(--gold);border-radius:12px;
+ z-index:100;display:none;max-width:90%;text-align:center;
+}
+.overlay{
+ position:fixed;inset:0;background:#000b;z-index:20;
+ display:none;align-items:center;justify-content:center;padding:15px;
+}
+.panel{
+ background:#211d23;border:1px solid var(--gold);
+ border-radius:18px;padding:22px;width:min(750px,100%);
+ max-height:90vh;overflow:auto;
+}
+.panel h2{color:var(--gold);margin-top:0}
+.panel input,.panel textarea,.panel select{
+ width:100%;background:#171419;color:white;
+ border:1px solid var(--line);border-radius:9px;
+ padding:11px;margin:6px 0 13px;
+}
+.panel label{color:var(--pink2);font-size:13px}
+.panel-actions{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}
+.small-btn{
+ padding:9px 13px;border-radius:9px;
+ background:#302832;color:white;border:1px solid var(--line);
+}
+.small-btn.active{background:var(--gold);color:#21191b}
+.close{
+ float:left;background:transparent;border:0;color:white;font-size:24px;
+}
+.admin-row{
+ padding:13px 0;border-bottom:1px solid var(--line);
+ line-height:1.9;font-size:13px;
+}
+.admin-row button{margin:4px}
+@media(max-width:500px){
+ .booking{padding:17px}
+ .slots{grid-template-columns:repeat(3,1fr)}
+ .hero{min-height:300px}
+}
 </style>
 </head>
+
 <body>
-<div id="bgi"></div>
-<div class="wrap">
-<header><span class="logo" id="lg"><span id="lga"></span><small id="lge" dir="ltr"></small></span><a class="btn alt" href="#booking">احجزي الآن</a></header>
-<div class="hero">
-<div class="kick" id="hk" dir="auto"></div>
-<h1 id="hn"></h1>
-<p id="hp"></p>
-<div class="row"><a class="btn" href="#booking">احجزي موعدك</a><a class="btn alt" href="#secs">شوفي الخدمات</a></div>
-</div>
+
+<header>
+ <div class="container head">
+  <div class="logo">
+   مركز لاڤيرن
+   <small>LAVERNE CENTER</small>
+  </div>
+  <button class="admin-btn" onclick="openLogin()">الإدارة</button>
+ </div>
+</header>
+
+<section class="hero" id="hero">
+ <div class="container">
+  <div style="color:var(--gold);letter-spacing:4px;font-size:11px" id="kick">
+   BEAUTY · CARE · ELEGANCE
+  </div>
+  <div class="gold-line"></div>
+  <h1 id="brandTitle">مركز لاڤيرن</h1>
+  <p id="heroText">اختاري خدماتك، وحدّدي الوقت المناسب، وأكدي حجزك في أقل من دقيقة.</p>
+  <div style="color:var(--pink2);margin-top:15px" id="tagText">جنات الطياري</div>
+ </div>
+</section>
+
+<main class="container">
+
+ <section class="section">
+  <div class="section-title">
+   <h2>خدماتنا</h2>
+   <p>اختاري الخدمات التي ترغبين بها</p>
+   <div class="gold-line"></div>
+  </div>
+  <div id="secs" class="services-grid">
+   <div class="empty">جاري تحميل الخدمات...</div>
+  </div>
+ </section>
+
+ <section class="section" id="blocksSection" style="display:none">
+  <div class="section-title"><h2>عروضنا وإضافاتنا</h2></div>
+  <div id="blocks"></div>
+ </section>
+
+ <section class="section">
+  <div class="section-title">
+   <h2>احجزي موعدك</h2>
+   <p>خطوات بسيطة لتأكيد موعدك</p>
+   <div class="gold-line"></div>
+  </div>
+
+  <div class="booking">
+   <div class="field">
+    <label>الاسم الكامل</label>
+    <input id="customerName" placeholder="اكتبي اسمك">
+   </div>
+
+   <div class="field">
+    <label>رقم الهاتف</label>
+    <input id="customerPhone" type="tel" placeholder="09xxxxxxxx">
+   </div>
+
+   <div class="field">
+    <label>تاريخ الحجز</label>
+    <input id="bookingDate" type="date">
+   </div>
+
+   <div class="field">
+    <label>اختاري الوقت المناسب</label>
+    <div id="slots" class="slots">
+     <div class="empty">اختاري التاريخ أولاً</div>
+    </div>
+   </div>
+
+   <div class="total">
+    <span>الإجمالي</span>
+    <span id="tot">0 د.ل</span>
+   </div>
+
+   <button class="primary" id="bookBtn" onclick="submitBooking()">
+    تأكيد الحجز
+   </button>
+   <p style="color:var(--muted);font-size:11px;text-align:center;margin-top:12px">
+    سيتم إرسال طلب الحجز وتأكيده حسب المواعيد المتاحة
+   </p>
+  </div>
+ </section>
+
+</main>
+
+<footer>
+ <div id="hoursText">يوميًا من 10 صباحًا إلى 9 مساءً</div>
+ <div id="addressText">صرمان عطاف</div>
+ <div style="color:var(--gold);margin-top:10px">LAVERNE CENTER</div>
+</footer>
+
+<a class="wa" id="waLink" href="https://wa.me/218912744233" target="_blank">واتساب</a>
+
+<div class="toast" id="toast"></div>
+
+<!-- تسجيل دخول الإدارة -->
+<div class="overlay" id="loginOverlay">
+ <div class="panel" style="max-width:380px">
+  <button class="close" onclick="closeLogin()">×</button>
+  <h2>دخول الإدارة</h2>
+  <label>الرقم السري</label>
+  <input id="adminPin" type="password" placeholder="أدخلي الرقم السري">
+  <button class="primary" onclick="loginAdmin()">دخول</button>
+ </div>
 </div>
 
-<section><div class="wrap" id="secs"></div></section>
-<div class="wrap" id="blk"></div>
+<!-- لوحة الإدارة -->
+<div class="overlay" id="adminOverlay">
+ <div class="panel">
+  <button class="close" onclick="closeAdmin()">×</button>
+  <h2>لوحة إدارة لاڤيرن</h2>
 
-<section id="booking"><div class="wrap">
-<h2>احجزي موعدك</h2>
-<p class="sub">اختاري الخدمات ثم اليوم والوقت. الأوقات المحجوزة تظهر غير متاحة.</p>
-<div class="grid">
-<div class="card" id="fc">
-<div id="form">
-<label for="date">اليوم</label><input type="date" id="date">
-<label>الوقت</label><div class="slots" id="slots"></div>
-<label for="nm">الاسم</label><input id="nm" autocomplete="name">
-<label for="ph">رقم الموبايل</label><input id="ph" type="tel" inputmode="tel" autocomplete="tel" dir="ltr" style="text-align:right" placeholder="09xxxxxxxx">
-<p class="err" id="er" role="alert"></p>
-</div>
-<div id="done" hidden style="text-align:center"><h3 id="dt"></h3><p id="dx"></p><a class="btn" id="dw" target="_blank" rel="noopener">أرسلي التفاصيل على واتساب</a><p><button class="btn alt" id="again" type="button">حجز جديد</button></p></div>
-</div>
-<div class="card" id="sc">
-<h3>ملخص الحجز</h3><ul id="sl"></ul>
-<div class="tot"><span>الإجمالي</span><span id="tot"></span></div>
-<button class="btn" id="bk" type="button" style="width:100%">أكدي الحجز</button>
-</div>
-</div>
-</div></section>
+  <div class="panel-actions">
+   <button class="small-btn active" onclick="showTab('appointments',this)">الحجوزات</button>
+   <button class="small-btn" onclick="showTab('settings',this)">الإعدادات</button>
+   <button class="small-btn" onclick="showTab('services',this)">الخدمات</button>
+   <button class="small-btn" onclick="showTab('blocks',this)">إدارة المواعيد</button>
+  </div>
 
-<footer><div class="wrap">
-<h3>التواصل</h3>
-<p id="hrs"></p><p id="adr"></p>
-<p><a id="tel" dir="ltr"></a></p>
-</div></footer>
+  <div id="tab-appointments">
+   <h3 style="color:var(--pink2)">قائمة الحجوزات</h3>
+   <button class="small-btn" onclick="loadAppointments()">تحديث الحجوزات</button>
+   <div id="appointmentList"><p class="empty">اضغطي تحديث الحجوزات</p></div>
+  </div>
 
-<a class="btn" id="wab" target="_blank" rel="noopener">واتساب</a>
+  <div id="tab-settings" style="display:none">
+   <h3 style="color:var(--pink2)">بيانات المركز</h3>
 
-<div id="pin" class="ov" hidden><div class="card">
-<h3>دخول الإدارة</h3>
-<label for="pi">الرقم السري</label><input id="pi" type="password" inputmode="numeric" autocomplete="off">
-<p class="err" id="pe"></p>
-<button class="btn" id="pok" type="button">دخول</button> <button class="btn alt" id="pcl" type="button">إلغاء</button>
-</div></div>
+   <label>اسم المركز</label>
+   <input id="setName">
 
-<div id="adm" class="ov" hidden>
-<div class="wrap">
-<div class="ah"><h2>لوحة الإدارة</h2><button class="btn alt" id="acl" type="button">إغلاق</button></div>
-<div class="tabs"><button class="tab" id="t0" type="button">الأصناف والأقسام</button><button class="tab" id="t1" type="button">المظهر والتواصل</button><button class="tab" id="t2" type="button">المواعيد</button></div>
-<div id="p0"></div>
-<div id="p1" hidden></div>
-<div id="p2" hidden></div>
+   <label>اسم صاحبة المركز أو العبارة التعريفية</label>
+   <input id="setTag">
+
+   <label>النص الصغير أعلى الصفحة</label>
+   <input id="setKick">
+
+   <label>النص الرئيسي</label>
+   <textarea id="setHero" rows="3"></textarea>
+
+   <label>رقم واتساب مع مفتاح الدولة بدون +</label>
+   <input id="setWa">
+
+   <label>العنوان</label>
+   <input id="setAddress">
+
+   <label>ساعات العمل</label>
+   <input id="setHours">
+
+   <label>ساعة بداية العمل بنظام 24 ساعة</label>
+   <input id="setOpen" type="number" min="0" max="23">
+
+   <label>ساعة نهاية العمل بنظام 24 ساعة</label>
+   <input id="setClose" type="number" min="1" max="24">
+
+   <label>رابط صورة خلفية الصفحة (اختياري)</label>
+   <input id="setBg">
+
+   <label>المظهر</label>
+   <select id="setTheme">
+    <option value="night">داكن</option>
+    <option value="light">فاتح</option>
+   </select>
+
+   <button class="primary" onclick="saveSettings()">حفظ الإعدادات</button>
+  </div>
+
+  <div id="tab-services" style="display:none">
+   <h3 style="color:var(--pink2)">تعديل الخدمات والأسعار</h3>
+   <p style="font-size:12px;color:var(--muted)">
+    عدّلي البيانات بصيغة JSON، مع المحافظة على ترتيب الأقواس والفواصل.
+   </p>
+   <textarea id="servicesJson" rows="17" dir="ltr" style="font-family:monospace;font-size:12px"></textarea>
+   <button class="primary" onclick="saveServices()">حفظ الخدمات</button>
+  </div>
+
+  <div id="tab-blocks" style="display:none">
+   <h3 style="color:var(--pink2)">حظر موعد أو إتاحته</h3>
+
+   <label>التاريخ</label>
+   <input id="blockDate" type="date">
+
+   <label>الوقت</label>
+   <input id="blockTime" type="time">
+
+   <div class="panel-actions">
+    <button class="small-btn" onclick="changeBlock('block')">حظر الموعد</button>
+    <button class="small-btn" onclick="changeBlock('unblock')">إلغاء الحظر</button>
+   </div>
+   <p style="font-size:12px;color:var(--muted)">
+    استخدمي هذه الخاصية لمنع الحجز في وقت محدد أو إتاحته مرة أخرى.
+   </p>
+  </div>
+
+ </div>
 </div>
-<div id="sv"><button class="btn" id="asave" type="button">حفظ التغييرات</button></div>
-</div>
-<div id="toast" hidden></div>
 
 <script>
+/* رابط السكربت */
 var API="https://script.google.com/macros/s/AKfycbyYL5Ea_R9r7Bwm0n2vniJRjZFYT1lxX5THzQ5eQy-89GLed8you5mxhXeSQ6VsQcl2/exec";
-var T={
-night:{bg:'#0e0d0b',sf:'#171512',ink:'#f3ece0',mu:'#b3a894',ac:'#d2b074',ai:'#14110d',ln:'#2c2820'},
-ivory:{bg:'#f4efe7',sf:'#fbf8f2',ink:'#17130f',mu:'#6f6659',ac:'#8c6c2c',ai:'#ffffff',ln:'#ddd2bf'},
-rose:{bg:'#f7e9e7',sf:'#fff6f4',ink:'#3a1f2a',mu:'#7d5f68',ac:'#a3566b',ai:'#ffffff',ln:'#e8cfcf'},
-emerald:{bg:'#0c1a16',sf:'#13251f',ink:'#eaf3ee',mu:'#9db8ac',ac:'#c9b27a',ai:'#0c1a16',ln:'#244137'}};
-var TN={night:'أسود وذهبي',ivory:'عاجي وذهبي',rose:'وردي',emerald:'زمردي'};
-var DEF={brand:'LAVERNE CENTER',name:'مركز لاڤيرن',tag:'جمالك في أيدٍ تعرف التفاصيل',kick:'BEAUTY · CARE · ELEGANCE',hero:'اختاري خدماتك، وحدّدي الوقت المناسب، وأكدي حجزك في أقل من دقيقة.',blocks:[],wa:'218912744233',theme:'night',bgimg:'',open:10,close:21,hours:'يوميًا من 10 صباحًا إلى 9 مساءً',addr:'',sections:[
-{t:'الشعر',items:[{n:'قص وتصفيف',d:'30 دقيقة',p:40,i:''},{n:'صبغة كاملة',d:'90 دقيقة',p:150,i:''},{n:'علاج بالكيراتين',d:'120 دقيقة',p:250,i:''}]},
-{t:'البشرة',items:[{n:'تنظيف بشرة عميق',d:'60 دقيقة',p:90,i:''},{n:'جلسة ترطيب',d:'45 دقيقة',p:70,i:''}]},
-{t:'الأظافر',items:[{n:'مانيكير',d:'40 دقيقة',p:35,i:''},{n:'باديكير',d:'50 دقيقة',p:45,i:''}]},
-{t:'المكياج',items:[{n:'مكياج سهرة',d:'60 دقيقة',p:150,i:''},{n:'مكياج وتسريحة عروس',d:'3 ساعات',p:700,i:''}]}]};
-var C=JSON.parse(JSON.stringify(DEF)),B={},ROWS=[],sel={},slot='',PIN='';
-var $=function(i){return document.getElementById(i)};
-function hr(t,a,c){var e=document.createElement(t);a=a||{};for(var k in a){if(k==='t')e.textContent=a[k];else e.setAttribute(k,a[k])}(c||[]).forEach(function(x){e.appendChild(x)});return e}
-function pad(n){return(n<10?'0':'')+n}
-function lbl(n){return(n>12?n-12:n)+':00 '+(n<12?'ص':'م')}
-function money(n){return Number(n).toLocaleString('en-US')+' د.ل'}
 
-function priceText(it){
- if(it.pt==='range') return money(it.min)+' - '+money(it.max);
- if(it.pt==='visit') return 'السعر بعد المعاينة';
- return money(it.p);
+var PIN="1234";
+
+var DEF={
+ brand:"LAVERNE CENTER",
+ name:"مركز لاڤيرن",
+ tag:"جنات الطياري",
+ kick:"BEAUTY · CARE · ELEGANCE",
+ hero:"اختاري خدماتك، وحدّدي الوقت المناسب، وأكدي حجزك في أقل من دقيقة.",
+ blocks:[],
+ wa:"218912744233",
+ theme:"night",
+ bgimg:"",
+ open:10,
+ close:21,
+ hours:"يوميًا من 10 صباحًا إلى 9 مساءً",
+ addr:"صرمان عطاف",
+ sections:[
+  {t:"الشعر",items:[
+   {n:"قص وتصفيف",p:40},
+   {n:"صبغة كاملة",p:150},
+   {n:"علاج بالكيراتين",p:250}
+  ]},
+  {t:"البشرة",items:[
+   {n:"تنظيف بشرة عميق",p:90},
+   {n:"جلسة ترطيب",p:70}
+  ]},
+  {t:"الأظافر",items:[
+   {n:"مانيكير",p:35,i:"https://lh3.googleusercontent.com/d/1Gtp704uISL2J0tvhZRhaQ46GY_F0pSb0"},
+   {n:"باديكير",p:45}
+  ]},
+  {t:"المكياج",items:[
+   {n:"مكياج سهرة",p:150},
+   {n:"مكياج وتسريحة عروس",p:700}
+  ]}
+ ]
+};
+
+var C=JSON.parse(JSON.stringify(DEF));
+var B={};
+var ROWS=[];
+var selectedSlot="";
+var selectedServices=[];
+var adminTab="appointments";
+
+function $(id){return document.getElementById(id)}
+
+function toast(msg){
+ var el=$("toast");
+ el.textContent=msg;
+ el.style.display="block";
+ clearTimeout(window.toastTimer);
+ window.toastTimer=setTimeout(function(){el.style.display="none"},3500);
 }
-function iso(d){return new Date(d.getTime()-d.getTimezoneOffset()*6e4).toISOString().slice(0,10)}
-function toast(m){var t=$('toast');t.textContent=m;t.hidden=false;setTimeout(function(){t.hidden=true},2600)}
-function post(o){return fetch(API,{method:'POST',body:JSON.stringify(o)}).then(function(r){return r.json()})}
-function two(b,fn){return function(){if(b.dataset.s)fn();else{b.dataset.s=1;b.textContent='تأكيد الحذف'}}}
 
-function theme(){var t=T[C.theme]||T.night,r=document.documentElement.style;for(var k in t)r.setProperty('--'+k,t[k]);$('bgi').style.backgroundImage=C.bgimg?'url('+C.bgimg+')':'none'}
-function secs(){var L=$('secs');L.innerHTML='';C.sections.forEach(function(s,si){
- var w=hr('div',{},[hr('h2',{t:s.t})]);
- s.items.forEach(function(it,ii){var k=si+'.'+ii,kids=[];
-  if(it.i){var th=hr('div',{class:'th'});th.style.backgroundImage='url('+it.i+')';kids.push(th)}
-  
-function slots(){
- var d=$('date').value,now=new Date(),L=$('slots');
- L.innerHTML='';
- for(var h=C.open;h<C.close;h++){
-  var t=pad(h)+':00',b=hr('button',{type:'button',class:'slot',t:lbl(h)});
-  if((B[d]||[]).indexOf(t)>=0){
-   b.textContent+=' (محجوز)';
-   b.disabled=true;
-  }else if(d===iso(now)&&h<=now.getHours()){
-   b.disabled=true;
-  }
-  b.setAttribute('aria-pressed',slot===t);
-  b.onclick=(function(t){return function(){slot=t;slots()}})(t);
-  L.appendChild(b);
+function escapeHtml(s){
+ return String(s==null?"":s).replace(/[&<>"']/g,function(c){
+  return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];
+ });
+}
+
+function apiPost(data){
+ return fetch(API,{
+  method:"POST",
+  headers:{"Content-Type":"text/plain;charset=utf-8"},
+  body:JSON.stringify(data)
+ }).then(function(r){return r.json()});
+}
+
+function applyTheme(){
+ if(C.theme==="light"){
+  document.documentElement.style.setProperty("--bg","#f8f0f2");
+  document.documentElement.style.setProperty("--card","#fff");
+  document.documentElement.style.setProperty("--text","#352a30");
+  document.documentElement.style.setProperty("--muted","#766b70");
+  document.documentElement.style.setProperty("--line","rgba(50,30,40,.13)");
+ }else{
+  document.documentElement.style.setProperty("--bg","#171419");
+  document.documentElement.style.setProperty("--card","#211d23");
+  document.documentElement.style.setProperty("--text","#fff8f5");
+  document.documentElement.style.setProperty("--muted","#b9adb3");
+  document.documentElement.style.setProperty("--line","rgba(255,255,255,.1)");
  }
 }
 
-  kids.push(hr('div',{class:'price',t:priceText(it)}));
-  w.appendChild(hr('div',{class:'svc'},kids))});
- L.appendChild(w)})}
- function chosen(){
- var n=[],t=0,min=0,max=0,hasRange=false,hasVisit=false;
+function renderHeader(){
+ $("brandTitle").textContent=C.name||DEF.name;
+ $("tagText").textContent=C.tag||"";
+ $("kick").textContent=C.kick||DEF.kick;
+ $("heroText").textContent=C.hero||DEF.hero;
+ $("hoursText").textContent=C.hours||"";
+ $("addressText").textContent=C.addr||"";
+ $("waLink").href="https://wa.me/"+String(C.wa||DEF.wa).replace(/\D/g,"");
 
- Object.keys(sel).forEach(function(k){
-  var a=k.split('.'),s=C.sections[a[0]],it=s&&s.items[a[1]];
-  if(!it)return;
+ if(C.bgimg){
+  $("hero").style.backgroundImage=
+   "linear-gradient(rgba(20,15,20,.65),rgba(20,15,20,.9)),url('"+C.bgimg+"')";
+ }
+}
 
-  n.push(it.n);
+function secs(){
+ var L=$("secs");
+ L.innerHTML="";
 
-  if(it.pt==='visit'){
-   hasVisit=true;
-  }else if(it.pt==='range'){
-   hasRange=true;
-   min+=Number(it.min)||0;
-   max+=Number(it.max)||0;
-  }else{
-   var p=Number(it.p)||0;
-   t+=p;
-   min+=p;
-   max+=p;
+ (C.sections||[]).forEach(function(s,si){
+  var box=document.createElement("div");
+  box.className="category";
+
+  var h=document.createElement("h3");
+  h.textContent=s.t||"الخدمات";
+  box.appendChild(h);
+
+  (s.items||[]).forEach(function(it,ii){
+   var key=si+"."+ii;
+   var row=document.createElement("label");
+   row.className="service";
+
+   if(it.i){
+    var img=document.createElement("img");
+    img.src=it.i;
+    img.alt=it.n||"";
+    row.appendChild(img);
+   }
+
+   var info=document.createElement("span");
+   info.className="service-info";
+
+   var name=document.createElement("strong");
+   name.textContent=it.n||"خدمة";
+   var price=document.createElement("small");
+   price.textContent=Number(it.p||0)+" د.ل";
+
+   info.appendChild(name);
+   info.appendChild(price);
+   row.appendChild(info);
+
+   var check=document.createElement("input");
+   check.type="checkbox";
+   check.value=key;
+   check.addEventListener("change",function(){
+    updateChosen();
+   });
+   row.appendChild(check);
+
+   box.appendChild(row);
+  });
+
+  L.appendChild(box);
+ });
+ updateChosen();
+}
+
+function updateChosen(){
+ selectedServices=[];
+ var checks=document.querySelectorAll("#secs input[type=checkbox]");
+ var total=0;
+
+ checks.forEach(function(ch){
+  if(ch.checked){
+   var parts=ch.value.split(".");
+   var it=C.sections[Number(parts[0])].items[Number(parts[1])];
+   if(it){
+    selectedServices.push(it.n);
+    total+=Number(it.p||0);
+   }
   }
  });
 
- var totalText=hasVisit?'يحدد بعد المعاينة':
- hasRange?money(min)+' - '+money(max):money(t);
-
- return{
-  n:n,t:t,min:min,max:max,
-  hasRange:hasRange,hasVisit:hasVisit,
-  totalText:totalText
- };
+ $("tot").textContent=total+" د.ل";
+ return {n:selectedServices,t:total};
 }
 
-function sum(){
- var u=$('sl');
- u.innerHTML='';
+function chosen(){return updateChosen()}
+
+function getDate(){
+ return $("bookingDate").value;
+}
+
+function timeLabel(h){
+ var suffix=h>=12?"مساءً":"صباحًا";
+ var hour=h%12;
+ if(hour===0)hour=12;
+ return hour+":00 "+suffix;
+}
+
+function slots(){
+ var L=$("slots");
+ L.innerHTML="";
+ selectedSlot="";
+
+ var d=getDate();
+ if(!d){
+  L.innerHTML='<div class="empty">اختاري التاريخ أولاً</div>';
+  return;
+ }
+
+ var now=new Date();
+ var today=now.getFullYear()+"-"+String(now.getMonth()+1).padStart(2,"0")+"-"+String(now.getDate()).padStart(2,"0");
+
+ for(var h=Number(C.open||10);h<Number(C.close||21);h++){
+  var time=String(h).padStart(2,"0")+":00";
+  var btn=document.createElement("button");
+  btn.type="button";
+  btn.className="slot";
+  btn.textContent=timeLabel(h);
+
+  var booked=B[d]||[];
+  var isBooked=booked.indexOf(time)!==-1;
+  var isPast=d<today||(d===today&&h<=now.getHours());
+
+  if(isBooked||isPast){
+   btn.disabled=true;
+  }else{
+   btn.addEventListener("click",function(t,b){
+    return function(){
+     document.querySelectorAll(".slot").forEach(function(x){
+      x.classList.remove("selected");
+     });
+     b.classList.add("selected");
+     selectedSlot=t;
+    };
+   }(time,btn));
+  }
+
+  L.appendChild(btn);
+ }
+
+ if(!L.children.length){
+  L.innerHTML='<div class="empty">لا توجد أوقات متاحة</div>';
+ }
+}
+
+function renderBlocks(){
+ var arr=C.blocks||[];
+ var section=$("blocksSection");
+ var L=$("blocks");
+ L.innerHTML="";
+
+ if(!arr.length){
+  section.style.display="none";
+  return;
+ }
+
+ section.style.display="block";
+
+ arr.forEach(function(b){
+  var div=document.createElement("div");
+  div.className="extra-block";
+  div.innerHTML="<h3>"+escapeHtml(b.t||"")+"</h3><p>"+escapeHtml(b.d||"")+"</p>";
+  L.appendChild(div);
+ });
+}
+
+function render(){
+ applyTheme();
+ renderHeader();
+ secs();
+ renderBlocks();
+ slots();
+}
+
+function loadData(){
+ fetch(API+"?a=data")
+ .then(function(r){return r.json()})
+ .then(function(d){
+  if(!d||d.ok===false)throw new Error("تعذر تحميل البيانات");
+
+  B=d.booked||d.B||{};
+
+  if(d.cfg){
+   C=Object.assign({},JSON.parse(JSON.stringify(DEF)),d.cfg);
+   if(!Array.isArray(C.sections))C.sections=DEF.sections;
+  }
+
+  render();
+ })
+ .catch(function(e){
+  console.log(e);
+  render();
+  toast("تعذر الاتصال بالخادم، تحققي من اتصال الإنترنت");
+ });
+}
+
+function submitBooking(){
+ var n=$("customerName").value.trim();
+ var p=$("customerPhone").value.trim();
+ var d=getDate();
  var c=chosen();
 
- if(!c.n.length){
-  u.appendChild(hr('li',{t:'لم تختاري خدمة بعد.'}));
- }
+ if(!n){toast("اكتبي الاسم");return}
+ if(!p){toast("اكتبي رقم الهاتف");return}
+ if(!d){toast("اختاري تاريخ الحجز");return}
+ if(!c.n.length){toast("اختاري خدمة واحدة على الأقل");return}
+ if(!selectedSlot){toast("اختاري وقت الحجز");return}
 
- Object.keys(sel).forEach(function(k){
-  var a=k.split('.'),s=C.sections[a[0]],it=s&&s.items[a[1]];
+ var btn=$("bookBtn");
+ btn.disabled=true;
+ btn.textContent="جاري إرسال الحجز...";
 
-  if(it){
-   u.appendChild(hr('li',{},[
-    hr('span',{t:it.n}),
-    hr('span',{t:priceText(it)})
-   ]));
-  }
- });
-
- $('tot').textContent=c.totalText;
-}
- for(var h=C.open;h<C.close;h++){var t=pad(h)+':00',b=hr('button',{type:'button',class:'slot',t:lbl(h)});
-  if((B[d]||[]).indexOf(t)>=0){b.textContent+=' (محجوز)';b.disabled=true}
-  else if(d===iso(now)&&h<=now.getHours())b.disabled=true;
-  b.setAttribute('aria-pressed',slot===t);
-  b.onclick=(function(t){return function(){slot=t;slots()}})(t);L.appendChild(b)}}
-function blks(){var L=$('blk');L.innerHTML='';(C.blocks||[]).forEach(function(b){if(!b.t&&!b.x)return;var k=[];if(b.t)k.push(hr('h3',{t:b.t}));if(b.x)k.push(hr('p',{t:b.x}));L.appendChild(hr('div',{class:'card'},k))})}
-function render(){theme();$('lga').textContent=C.name;$('lge').textContent=C.brand;$('hk').textContent=C.kick||'';$('hp').textContent=C.hero||'';$('hn').innerHTML='';$('hn').appendChild(document.createTextNode(C.name));$('hn').appendChild(document.createElement('br'));$('hn').appendChild(document.createTextNode(C.tag));
- document.title=C.name+' | '+C.brand;$('hrs').textContent=C.hours||'';$('adr').textContent=C.addr||'';$('tel').textContent='+'+C.wa;$('tel').href='tel:+'+C.wa;$('wab').href='https://wa.me/'+C.wa;
- blks();secs();sum();slots()}
-
-$('date').min=iso(new Date());$('date').value=iso(new Date());
-$('date').onchange=function(){slot='';slots()};
-$('bk').onclick=function(){
- var c=chosen(),n=$('nm').value.trim(),p=$('ph').value.trim(),d=$('date').value,e=$('er');
- if(!c.n.length){e.textContent='اختاري خدمة واحدة على الأقل.';return}
- if(!slot){e.textContent='اختاري وقتًا.';return}
- if(n.length<2){e.textContent='اكتبي اسمك.';return}
- if(!/^[0-9٠-٩+\s]{8,15}$/.test(p)){e.textContent='اكتبي رقم موبايل صحيح.';return}
- e.textContent='';
- var msg='حجز جديد\nالاسم: '+n+'\nالموبايل: '+p+'\nالخدمات: '+c.n.join('، ')+'\nاليوم: '+d+'\nالوقت: '+slot+'\nالإجمالي: '+c.totalText;
- function fin(ok){$('form').hidden=true;$('sc').hidden=true;$('done').hidden=false;
-  $('dt').textContent=ok?'تم حجز موعدك':'تم تجهيز طلبك';
-  $('dx').textContent=ok?(n+'، موعدك يوم '+d+' الساعة '+slot+'. نراك قريبًا.'):'أرسلي التفاصيل على واتساب لتأكيد الموعد.';
-  $('dw').href='https://wa.me/'+C.wa+'?text='+encodeURIComponent(msg);$('fc').scrollIntoView()}
- if(!API){fin(false);return}
- $('bk').disabled=true;
- post({a:'book',date:d,time:slot,name:n,phone:p,svc:c.n.join('، '),total:(c.hasVisit||c.hasRange)?0:c.t,totalText:c.totalText}).then(function(r){
-  $('bk').disabled=false;
-  if(r.ok){(B[d]=B[d]||[]).push(slot);fin(true)}
-  else{if(r.booked)B=r.booked;slot='';slots();e.textContent=r.err==='taken'?'هذا الوقت انحجز للتو. اختاري وقتًا آخر.':'تعذر الحجز. حاولي مرة ثانية.'}
- }).catch(function(){$('bk').disabled=false;e.textContent='تعذر الاتصال. حاولي مرة ثانية.'})};
-$('again').onclick=function(){sel={};slot='';$('form').hidden=false;$('sc').hidden=false;$('done').hidden=true;render()};
-
-/* ===== الإدارة (مخفية) ===== */
-var tp=0,tm;
-$('lg').onclick=function(){tp++;clearTimeout(tm);tm=setTimeout(function(){tp=0},1500);if(tp>=5){tp=0;openPin()}};
-function openPin(){$('pin').hidden=false;$('pe').textContent='';$('pi').value='';$('pi').focus()}
-$('pcl').onclick=function(){$('pin').hidden=true};
-$('pok').onclick=function(){
- if(!API){$('pe').textContent='اربطي رابط Apps Script أولًا (انظري التعليمات).';return}
- var v=$('pi').value.trim().replace(/[٠-٩]/g,function(c){return c.charCodeAt(0)-1632}).replace(/[۰-۹]/g,function(c){return c.charCodeAt(0)-1776});
- post({a:'list',pin:v}).then(function(r){
-  if(r.ok){PIN=v;ROWS=r.rows||[];$('pin').hidden=true;openAdm()}else $('pe').textContent='الرقم السري غير صحيح.'
- }).catch(function(){$('pe').textContent='تعذر الاتصال بالخلفية. تأكدي أن النشر Anyone وأن الرابط في API صحيح.'})};
-$('pi').onkeydown=function(e){if(e.key==='Enter')$('pok').click()};
-function openAdm(){$('adm').hidden=false;tab(0)}
-$('acl').onclick=function(){$('adm').hidden=true;render()};
-function tab(k){for(var i=0;i<3;i++){$('p'+i).hidden=i!==k;$('t'+i).setAttribute('aria-selected',i===k)}if(k===0)aS();if(k===1)aT();if(k===2)aM()}
-[0,1,2].forEach(function(i){$('t'+i).onclick=function(){tab(i)}});
-$('asave').onclick=function(){post({a:'save',pin:PIN,cfg:C}).then(function(r){toast(r.ok?'تم الحفظ':'تعذر الحفظ')}).catch(function(){toast('تعذر الاتصال')})};
-function rs(f,cb){var r=new FileReader();r.onload=function(){var im=new Image();im.onload=function(){var k=Math.min(1,700/Math.max(im.width,im.height)),c=document.createElement('canvas');c.width=im.width*k;c.height=im.height*k;c.getContext('2d').drawImage(im,0,0,c.width,c.height);cb(c.toDataURL('image/jpeg',0.75))};im.src=r.result};r.readAsDataURL(f)}
-function up(f,cb){toast('جاري رفع الصورة...');rs(f,function(d){post({a:'upload',pin:PIN,data:d.split(',')[1]}).then(function(r){if(r.ok){cb(r.url);toast('تم رفع الصورة. لا تنسي الحفظ.')}else toast('تعذر رفع الصورة')}).catch(function(){toast('تعذر الاتصال')})})}
-function inp(v,ph,fn,type){var i=hr('input',{placeholder:ph,type:type||'text'});i.value=v==null?'':v;i.oninput=function(){fn(i.value)};return i}
-
-function aS(){
- var P=$('p0');
- P.innerHTML='';
-
- C.sections.forEach(function(s,si){
-  var box=hr('div',{class:'card'});
-
-  var dl=hr('button',{type:'button',class:'add',t:'حذف القسم'});
-  dl.onclick=two(dl,function(){
-   C.sections.splice(si,1);
-   sel={};
-   aS();
-  });
-
-  box.appendChild(hr('div',{class:'ar'},[
-   inp(s.t,'اسم القسم',function(v){s.t=v}),
-   dl
-  ]));
-
-  s.items.forEach(function(it,ii){
-   var im=hr('div',{class:'th'});
-   if(it.i)im.style.backgroundImage='url('+it.i+')';
-
-   var x=hr('button',{type:'button',class:'add full',t:'حذف الصنف'});
-   x.onclick=two(x,function(){
-    s.items.splice(ii,1);
-    sel={};
-    aS();
-   });
-
-   var rm=hr('button',{type:'button',class:'add full',t:'إزالة الصورة'});
-   rm.onclick=function(){
-    it.i='';
-    im.style.backgroundImage='none';
-   };
-
-   var nm=inp(it.n,'اسم الخدمة',function(v){it.n=v});
-   nm.className='full';
-
-   it.pt=it.pt||'fixed';
-
-   var pt=hr('select');
-   [
-    {v:'fixed',t:'سعر ثابت'},
-    {v:'range',t:'سعر من مبلغ إلى مبلغ'},
-    {v:'visit',t:'السعر بعد المعاينة'}
-   ].forEach(function(o){
-    pt.appendChild(hr('option',{value:o.v,t:o.t}));
-   });
-
-   pt.value=it.pt;
-   pt.onchange=function(){
-    it.pt=pt.value;
-    aS();
-   };
-
-   var fields=[im,nm,pt];
-
-   if(it.pt==='fixed'){
-    var pr=inp(it.p,'السعر بالدينار',function(v){
-     it.p=Number(v)||0;
-    },'number');
-    fields.push(pr);
-   }
-
-   if(it.pt==='range'){
-    var mn=inp(it.min,'أقل سعر بالدينار',function(v){
-     it.min=Number(v)||0;
-    },'number');
-
-    var mx=inp(it.max,'أعلى سعر بالدينار',function(v){
-     it.max=Number(v)||0;
-    },'number');
-
-    fields.push(mn,mx);
-   }
-
-   if(it.pt==='visit'){
-    fields.push(hr('p',{class:'sub',t:'السعر النهائي يتحدد بعد معاينة الشعر.'}));
-   }
-
-   var du=inp(it.d,'المدة',function(v){it.d=v});
-
-   var f=hr('input',{type:'file',accept:'image/*',class:'full'});
-   f.onchange=function(){
-    if(f.files[0])up(f.files[0],function(u){
-     it.i=u;
-     im.style.backgroundImage='url('+u+')';
-    });
-   };
-
-   fields.push(du,f,rm,x);
-   box.appendChild(hr('div',{class:'item'},fields));
-  });
-
-  var ad=hr('button',{type:'button',class:'btn alt',t:'+ إضافة صنف'});
-  ad.onclick=function(){
-   s.items.push({n:'',d:'',p:0,i:'',pt:'fixed',min:0,max:0});
-   aS();
-  };
-
-  box.appendChild(ad);
-  P.appendChild(box);
- });
-
- var as=hr('button',{type:'button',class:'btn',t:'+ إضافة قسم جديد'});
- as.onclick=function(){
-  C.sections.push({t:'قسم جديد',items:[]});
-  aS();
+ var data={
+  a:"book",
+  date:d,
+  time:selectedSlot,
+  name:n,
+  phone:p,
+  svc:c.n.join("، "),
+  total:c.t,
+  totalText:c.t+" د.ل"
  };
 
- P.appendChild(as);
-}
-function aT(){
- var P=$('p1');
- P.innerHTML='';
- var sl=hr('select');Object.keys(TN).forEach(function(k){var o=hr('option',{value:k,t:TN[k]});if(k===C.theme)o.selected=true;sl.appendChild(o)});
- sl.onchange=function(){C.theme=sl.value;theme()};
- var f=hr('input',{type:'file',accept:'image/*'});f.onchange=function(){if(f.files[0])up(f.files[0],function(u){C.bgimg=u;theme()})};
- var rb=hr('button',{type:'button',class:'add',t:'إزالة صورة الخلفية'});rb.onclick=function(){C.bgimg='';theme()};
- var L=function(t){return hr('label',{t:t})};
- [[L('اسم الشعار (إنجليزي)'),inp(C.brand,'',function(v){C.brand=v})],[L('اسم المركز (عربي)'),inp(C.name,'',function(v){C.name=v})],[L('الشعار النصي'),inp(C.tag,'',function(v){C.tag=v})],
- [L('رقم واتساب بصيغة دولية بدون + (مثال 218912744233)'),inp(C.wa,'',function(v){C.wa=v.replace(/[^0-9]/g,'')},'tel')],
- [L('ألوان الموقع'),sl],[L('صورة الخلفية'),f,rb],
- [L('بداية الدوام (ساعة من 0 إلى 23)'),inp(C.open,'',function(v){C.open=Math.max(0,Math.min(23,Number(v)||10))},'number')],
- [L('نهاية الدوام (ساعة)'),inp(C.close,'',function(v){C.close=Math.max(1,Math.min(24,Number(v)||21))},'number')],
- [L('نص مواعيد العمل'),inp(C.hours,'',function(v){C.hours=v})],[L('العنوان'),inp(C.addr,'',function(v){C.addr=v})],
- [L('العبارة الصغيرة فوق العنوان'),inp(C.kick,'',function(v){C.kick=v})],[L('الجملة تحت العنوان'),inp(C.hero,'',function(v){C.hero=v})]
- ].forEach(function(r){r.forEach(function(e){P.appendChild(e)})});
- P.appendChild(hr('h3',{t:'عبارات وفقرات إضافية',style:'margin-top:24px'}));
- P.appendChild(hr('p',{class:'sub',t:'تظهر في الصفحة تحت الخدمات، مثل نبذة عن المركز أو عرض أو ملاحظات.'}));
- C.blocks=C.blocks||[];
- C.blocks.forEach(function(b,bi){var dl=hr('button',{type:'button',class:'add',t:'حذف'});dl.onclick=two(dl,function(){C.blocks.splice(bi,1);aT()});
-  var ta=hr('textarea',{rows:'3',placeholder:'النص'});ta.value=b.x||'';ta.oninput=function(){b.x=ta.value};
-  P.appendChild(hr('div',{class:'card'},[inp(b.t,'العنوان (اختياري)',function(v){b.t=v}),ta,dl]))});
- var ab=hr('button',{type:'button',class:'btn alt',t:'+ إضافة عبارة'});ab.onclick=function(){C.blocks.push({t:'',x:''});aT()};P.appendChild(ab)}
-function aM(){var P=$('p2');P.innerHTML='';
- var d=hr('input',{type:'date'});d.value=iso(new Date());
- var g=hr('div',{class:'slots'});
- function gr(){g.innerHTML='';for(var h=C.open;h<C.close;h++){var t=pad(h)+':00',on=(B[d.value]||[]).indexOf(t)>=0,b=hr('button',{type:'button',class:'slot',t:lbl(h)+(on?' ✕':'')});b.setAttribute('aria-pressed',on);
-  b.onclick=(function(t,on){return function(){var dv=d.value;post({a:on?'unblock':'block',pin:PIN,date:dv,time:t}).then(function(r){if(!r.ok){toast('تعذر التنفيذ');return}
-   var a=B[dv]||[];if(on)a.splice(a.indexOf(t),1);else a.push(t);B[dv]=a;if(on)ROWS=ROWS.filter(function(x){return!(x.d===dv&&x.t===t)});gr();aM2()}).catch(function(){toast('تعذر الاتصال')})}})(t,on);g.appendChild(b)}}
- d.onchange=gr;P.appendChild(hr('label',{t:'اليوم'}));P.appendChild(d);P.appendChild(hr('p',{class:'sub',t:'اضغطي على الوقت لقفله، واضغطي مرة ثانية لفتحه.'}));P.appendChild(g);gr();
- P.appendChild(hr('h3',{t:'الحجوزات',style:'margin-top:24px'}));var Lw=hr('div',{id:'bl'});P.appendChild(Lw);aM2()}
-function aM2(){var Lw=$('bl');if(!Lw)return;Lw.innerHTML='';
- if(!ROWS.length)Lw.appendChild(hr('p',{class:'sub',t:'لا توجد حجوزات.'}));
- ROWS.slice().reverse().forEach(function(r){
-  var c=hr('button',{type:'button',class:'add',t:'إلغاء'});
-  c.onclick=two(c,function(){post({a:'unblock',pin:PIN,date:r.d,time:r.t}).then(function(x){if(x.ok){var a=B[r.d]||[];a.splice(a.indexOf(r.t),1);ROWS=ROWS.filter(function(y){return y!==r});aM2()}}).catch(function(){toast('تعذر الاتصال')})});
-  Lw.appendChild(hr('div',{class:'ar'},[
- hr('span',{t:r.d+' · '+r.t+' · '+r.n+(r.totalText?' · '+r.totalText:(r.p?' · '+r.p+' د.ل':''))+(r.s?' · '+r.s:'')}),
- c
-]))
+ apiPost(data)
+ .then(function(res){
+  if(res&&res.ok){
+   toast("تم إرسال طلب الحجز بنجاح");
+   $("customerName").value="";
+   $("customerPhone").value="";
+   document.querySelectorAll("#secs input").forEach(function(x){x.checked=false});
+   selectedSlot="";
+   updateChosen();
+   loadData();
+  }else{
+   toast((res&&res.message)||"لم يتم الحجز، قد يكون الموعد محجوزًا");
+   loadData();
+  }
  })
-}
-render();
-if(API){fetch(API+'?a=data').then(function(r){return r.json()}).then(function(d){if(d.cfg&&d.cfg.sections)C=Object.assign({},DEF,d.cfg);B=d.booked||{};render()}).catch(function(){})}
-if(location.hash==='#admin')openPin();
-</script>
-</body>
-</html>
-</div></section>
-<footer><div class="wrap">
-<h3>التواصل</h3><p id="hrs"></p><p id="adr"></p><p><a id="tel" dir="ltr"></a></p>
-</div></footer>
-<a class="btn" id="wab" target="_blank" rel="noopener">واتساب</a>
-<div id="pin" class="ov" hidden><div class="card">
-<h3>دخول الإدارة</h3><label for="pi">الرقم السري</label><input id="pi" type="password" inputmode="numeric" autocomplete="off">
-<p class="err" id="pe"></p><button class="btn" id="pok" type="button">دخول</button> <button class="btn alt" id="pcl" type="button">إلغاء</button>
-</div></div>
-<div id="adm" class="ov" hidden><div class="wrap">
-<div class="ah"><h2>لوحة الإدارة</h2><button class="btn alt" id="acl" type="button">إغلاق</button></div>
-<div class="tabs"><button class="tab" id="t0" type="button">الأصناف والأقسام</button><button class="tab" id="t1" type="button">المظهر والتواصل</button><button class="tab" id="t2" type="button">المواعيد</button></div>
-<div id="p0"></div><div id="p1" hidden></div><div id="p2" hidden></div>
-</div><div id="sv"><button class="btn" id="asave" type="button">حفظ التغييرات</button></div></div>
-<div id="toast" hidden></div>
-<script>
-var API="https://script.google.com/macros/s/AKfycbyYL5Ea_R9r7Bwm0n2vniJRjZFYT1lxX5THzQ5eQy-89GLed8you5mxhXeSQ6VsQcl2/exec";
-var T={
- night:{bg:'#0e0d0b',sf:'#171512',ink:'#f3ece0',mu:'#b3a894',ac:'#d2b074',ai:'#14110d',ln:'#2c2820'},
- ivory:{bg:'#f4efe7',sf:'#fbf8f2',ink:'#17130f',mu:'#6f6659',ac:'#8c6c2c',ai:'#ffffff',ln:'#ddd2bf'},
- rose:{bg:'#f7e9e7',sf:'#fff6f4',ink:'#3a1f2a',mu:'#7d5f68',ac:'#a3566b',ai:'#ffffff',ln:'#e8cfcf'},
- emerald:{bg:'#0c1a16',sf:'#13251f',ink:'#eaf3ee',mu:'#9db8ac',ac:'#c9b27a',ai:'#0c1a16',ln:'#244137'}
-};
-var TN={night:'أسود وذهبي',ivory:'عاجي وذهبي',rose:'وردي',emerald:'زمردي'};
-var DEF={brand:'LAVERNE CENTER',name:'مركز لاڤيرن',tag:'جمالك في أيدٍ تعرف التفاصيل',kick:'BEAUTY · CARE · ELEGANCE',hero:'اختاري خدماتك، وحدّدي الوقت المناسب، وأكدي حجزك في أقل من دقيقة.',blocks:[],wa:'218912744233',theme:'night',bgimg:'',open:10,close:21,hours:'يوميًا من 10 صباحًا إلى 9 مساءً',addr:'',sections:[
- {t:'الشعر',items:[{n:'قص وتصفيف',d:'30 دقيقة',p:40,i:''},{n:'صبغة كاملة',d:'90 دقيقة',p:150,i:''},{n:'علاج بالكيراتين',d:'120 دقيقة',p:250,i:''}]},
- {t:'البشرة',items:[{n:'تنظيف بشرة عميق',d:'60 دقيقة',p:90,i:''},{n:'جلسة ترطيب',d:'45 دقيقة',p:70,i:''}]},
- {t:'الأظافر',items:[{n:'مانيكير',d:'40 دقيقة',p:35,i:''},{n:'باديكير',d:'50 دقيقة',p:45,i:''}]},
- {t:'المكياج',items:[{n:'مكياج سهرة',d:'60 دقيقة',p:150,i:''},{n:'مكياج وتسريحة عروس',d:'3 ساعات',p:700,i:''}]}
-]};
-var C=JSON.parse(JSON.stringify(DEF)),B={},ROWS=[],sel={},slot='',PIN='';
-var $=function(i){return document.getElementById(i)};
-function hr(t,a,c){var e=document.createElement(t);a=a||{};for(var k in a){if(k==='t')e.textContent=a[k];else e.setAttribute(k,a[k])}(c||[]).forEach(function(x){e.appendChild(x)});return e}
-function pad(n){return(n<10?'0':'')+n}
-function lbl(n){return(n>12?n-12:n)+':00 '+(n<12?'ص':'م')}
-function money(n){return Number(n).toLocaleString('en-US')+' د.ل'}
-function priceText(it){if(it.pt==='range')return money(it.min)+' - '+money(it.max);if(it.pt==='visit')return 'السعر بعد المعاينة';return money(it.p)}
-function iso(d){return new Date(d.getTime()-d.getTimezoneOffset()*6e4).toISOString().slice(0,10)}
-function toast(m){var t=$('toast');t.textContent=m;t.hidden=false;setTimeout(function(){t.hidden=true},2600)}
-function post(o){return fetch(API,{method:'POST',body:JSON.stringify(o)}).then(function(r){return r.json()})}
-function two(b,fn){return function(){if(b.dataset.s)fn();else{b.dataset.s=1;b.textContent='تأكيد الحذف'}}}
-function theme(){var t=T[C.theme]||T.night,r=document.documentElement.style;for(var k in t)r.setProperty('--'+k,t[k]);$('bgi').style.backgroundImage=C.bgimg?'url('+C.bgimg+')':'none'}
-function secs(){
- var L=$('secs');L.innerHTML='';
- (C.sections||[]).forEach(function(s,si){
-  var w=hr('div',{},[hr('h2',{t:s.t})]);
-  (s.items||[]).forEach(function(it,ii){
-   var k=si+'.'+ii,kids=[];
-   if(it.i){var th=hr('div',{class:'th'});th.style.backgroundImage='url('+it.i+')';kids.push(th)}
-   kids.push(hr('div',{class:'mid'},[hr('h3',{t:it.n}),hr('small',{t:it.d||''})]));
-   kids.push(hr('div',{class:'price',t:priceText(it)}));
-   var b=hr('button',{type:'button',class:'add',t:sel[k]?'تم الاختيار':'اختاري'});
-   b.setAttribute('aria-pressed',!!sel[k]);
-   b.onclick=function(){if(sel[k])delete sel[k];else sel[k]=true;sum();secs()};
-   kids.push(b);w.appendChild(hr('div',{class:'svc'},kids));
-  });
-  L.appendChild(w);
+ .catch(function(e){
+  console.log(e);
+  toast("حدث خطأ في الاتصال. حاولي مرة أخرى");
+ })
+ .finally(function(){
+  btn.disabled=false;
+  btn.textContent="تأكيد الحجز";
  });
 }
-function slots(){
- var d=$('date').value,now=new Date(),L=$('slots');L.innerHTML='';
- for(var h=Number(C.open);h<Number(C.close);h++){
-  var t=pad(h)+':00',b=hr('button',{type:'button',class:'slot',t:lbl(h)});
-  if((B[d]||[]).indexOf(t)>=0){b.textContent+=' (محجوز)';b.disabled=true}
-  else if(d===iso(now)&&h<=now.getHours()){b.disabled=true}
-  b.setAttribute('aria-pressed',slot===t);
-  b.onclick=(function(t){return function(){slot=t;slots()}})(t);
-  L.appendChild(b);
+
+$("bookingDate").min=new Date().toISOString().slice(0,10);
+$("bookingDate").addEventListener("change",slots);
+
+/* الإدارة */
+
+function openLogin(){
+ $("loginOverlay").style.display="flex";
+ $("adminPin").value="";
+}
+
+function closeLogin(){
+ $("loginOverlay").style.display="none";
+}
+
+function closeAdmin(){
+ $("adminOverlay").style.display="none";
+}
+
+function loginAdmin(){
+ if($("adminPin").value!==PIN){
+  toast("الرقم السري غير صحيح");
+  return;
  }
+
+ closeLogin();
+ $("adminOverlay").style.display="flex";
+ fillSettings();
+ loadAppointments();
 }
-function chosen(){
- var n=[],t=0,min=0,max=0,hasRange=false,hasVisit=false;
- Object.keys(sel).forEach(function(k){
-  var a=k.split('.'),s=C.sections[a[0]],it=s&&s.items[a[1]];if(!it)return;
-  n.push(it.n);
-  if(it.pt==='visit')hasVisit=true;
-  else if(it.pt==='range'){hasRange=true;min+=Number(it.min)||0;max+=Number(it.max)||0}
-  else{var p=Number(it.p)||0;t+=p;min+=p;max+=p}
+
+function showTab(tab,btn){
+ adminTab=tab;
+
+ ["appointments","settings","services","blocks"].forEach(function(t){
+  $("tab-"+t).style.display=t===tab?"block":"none";
  });
- var totalText=hasVisit?'يحدد بعد المعاينة':hasRange?money(min)+' - '+money(max):money(t);
- return{n:n,t:t,min:min,max:max,hasRange:hasRange,hasVisit:hasVisit,totalText:totalText};
-}
-function sum(){
- var u=$('sl');u.innerHTML='';var c=chosen();
- if(!c.n.length)u.appendChild(hr('li',{t:'لم تختاري خدمة بعد.'}));
- Object.keys(sel).forEach(function(k){
-  var a=k.split('.'),s=C.sections[a[0]],it=s&&s.items[a[1]];
-  if(it)u.appendChild(hr('li',{},[hr('span',{t:it.n}),hr('span',{t:priceText(it)})]));
+
+ document.querySelectorAll(".panel-actions .small-btn").forEach(function(b){
+  b.classList.remove("active");
  });
- $('tot').textContent=c.totalText;
+ if(btn)btn.classList.add("active");
 }
-function blks(){
- var L=$('blk');L.innerHTML='';
- (C.blocks||[]).forEach(function(b){if(!b.t&&!b.x)return;var k=[];if(b.t)k.push(hr('h3',{t:b.t}));if(b.x)k.push(hr('p',{t:b.x}));L.appendChild(hr('div',{class:'card'},k))});
+
+function fillSettings(){
+ $("setName").value=C.name||"";
+ $("setTag").value=C.tag||"";
+ $("setKick").value=C.kick||"";
+ $("setHero").value=C.hero||"";
+ $("setWa").value=C.wa||"";
+ $("setAddress").value=C.addr||"";
+ $("setHours").value=C.hours||"";
+ $("setOpen").value=C.open||10;
+ $("setClose").value=C.close||21;
+ $("setBg").value=C.bgimg||"";
+ $("setTheme").value=C.theme||"night";
+ $("servicesJson").value=JSON.stringify(C.sections||[],null,2);
 }
-function render(){
- theme();$('lga').textContent=C.name;$('lge').textContent=C.brand;$('hk').textContent=C.kick||'';$('hp').textContent=C.hero||'';
- $('hn').textContent=C.name+' '+(C.tag||'');document.title=C.name+' | '+C.brand;
- $('hrs').textContent=C.hours||'';$('adr').textContent=C.addr||'';$('tel').textContent='+'+C.wa;$('tel').href='tel:+'+C.wa;$('wab').href='https://wa.me/'+C.wa;
- blks();secs();sum();slots();
-}
-$('date').min=iso(new Date());$('date').value=iso(new Date());
-$('date').onchange=function(){slot='';slots()};
-$('bk').onclick=function(){
- var c=chosen(),n=$('nm').value.trim(),p=$('ph').value.trim(),d=$('date').value,e=$('er');
- if(!c.n.length){e.textContent='اختاري خدمة واحدة على الأقل.';return}
- if(!slot){e.textContent='اختاري وقتًا.';return}
- if(n.length<2){e.textContent='اكتبي اسمك.';return}
- if(!/^[0-9٠-٩+\s]{8,15}$/.test(p)){e.textContent='اكتبي رقم موبايل صحيح.';return}
- e.textContent='';
- var msg='حجز جديد\nالاسم: '+n+'\nالموبايل: '+p+'\nالخدمات: '+c.n.join('، ')+'\nاليوم: '+d+'\nالوقت: '+slot+'\nالإجمالي: '+c.totalText;
- function fin(ok){$('form').hidden=true;$('sc').hidden=true;$('done').hidden=false;$('dt').textContent=ok?'تم حجز موعدك':'تم تجهيز طلبك';$('dx').textContent=ok?(n+'، موعدك يوم '+d+' الساعة '+slot+'. نراك قريبًا.'):'أرسلي التفاصيل على واتساب لتأكيد الموعد.';$('dw').href='https://wa.me/'+C.wa+'?text='+encodeURIComponent(msg);$('fc').scrollIntoView()}
- if(!API){fin(false);return}
- $('bk').disabled=true;
- post({a:'book',date:d,time:slot,name:n,phone:p,svc:c.n.join('، '),total:(c.hasVisit||c.hasRange)?0:c.t,totalText:c.totalText}).then(function(r){
-  $('bk').disabled=false;
-  if(r.ok){(B[d]=B[d]||[]).push(slot);fin(true)}
-  else{if(r.booked)B=r.booked;slot='';slots();e.textContent=r.err==='taken'?'هذا الوقت انحجز للتو. اختاري وقتًا آخر.':'تعذر الحجز. حاولي مرة ثانية.'}
- }).catch(function(){$('bk').disabled=false;e.textContent='تعذر الاتصال. حاولي مرة ثانية.'});
- };
-$('again').onclick=function(){sel={};slot='';$('nm').value='';$('ph').value='';$('form').hidden=false;$('sc').hidden=false;$('done').hidden=true;render()};
-var tp=0,tm;
-$('lg').onclick=function(){tp++;clearTimeout(tm);tm=setTimeout(function(){tp=0},1500);if(tp>=5){tp=0;openPin()}};
-function openPin(){$('pin').hidden=false;$('pe').textContent='';$('pi').value='';$('pi').focus()}
-$('pcl').onclick=function(){$('pin').hidden=true};
-$('pok').onclick=function(){
- if(!API){$('pe').textContent='رابط Apps Script غير موجود.';return}
- var v=$('pi').value.trim().replace(/[٠-٩]/g,function(c){return c.charCodeAt(0)-1632}).replace(/[۰-۹]/g,function(c){return c.charCodeAt(0)-1776});
- post({a:'list',pin:v}).then(function(r){if(r.ok){PIN=v;ROWS=r.rows||[];$('pin').hidden=true;openAdm()}else $('pe').textContent='الرقم السري غير صحيح.'}).catch(function(){$('pe').textContent='تعذر الاتصال بالخلفية. تأكدي من رابط السكربت.'});
-};
-$('pi').onkeydown=function(e){if(e.key==='Enter')$('pok').click()};
-function openAdm(){$('adm').hidden=false;tab(0)}
-$('acl').onclick=function(){$('adm').hidden=true;render()};
-function tab(k){for(var i=0;i<3;i++){$('p'+i).hidden=i!==k;$('t'+i).setAttribute('aria-selected',i===k)}if(k===0)aS();if(k===1)aT();if(k===2)aM()}
-[0,1,2].forEach(function(i){$('t'+i).onclick=function(){tab(i)}});
-$('asave').onclick=function(){post({a:'save',pin:PIN,cfg:C}).then(function(r){toast(r.ok?'تم الحفظ':'تعذر الحفظ')}).catch(function(){toast('تعذر الاتصال')})};
-function rs(f,cb){var r=new FileReader();r.onload=function(){var im=new Image();im.onload=function(){var k=Math.min(1,700/Math.max(im.width,im.height)),c=document.createElement('canvas');c.width=im.width*k;c.height=im.height*k;c.getContext('2d').drawImage(im,0,0,c.width,c.height);cb(c.toDataURL('image/jpeg',0.75))};im.src=r.result};r.readAsDataURL(f)}
-function up(f,cb){toast('جاري رفع الصورة...');rs(f,function(d){post({a:'upload',pin:PIN,data:d.split(',')[1]}).then(function(r){if(r.ok){cb(r.url);toast('تم رفع الصورة. لا تنسي الحفظ.')}else toast('تعذر رفع الصورة')}).catch(function(){toast('تعذر الاتصال')})})}
-function inp(v,ph,fn,type){var i=hr('input',{placeholder:ph,type:type||'text'});i.value=v==null?'':v;i.oninput=function(){fn(i.value)};return i}
-function aS(){
- var P=$('p0');P.innerHTML='';
- C.sections.forEach(function(s,si){
-  var box=hr('div',{class:'card'}),dl=hr('button',{type:'button',class:'add',t:'حذف القسم'});
-  dl.onclick=two(dl,function(){C.sections.splice(si,1);sel={};aS()});
-  box.appendChild(hr('div',{class:'ar'},[inp(s.t,'اسم القسم',function(v){s.t=v}),dl]));
-  s.items.forEach(function(it,ii){
-   var im=hr('div',{class:'th'});if(it.i)im.style.backgroundImage='url('+it.i+')';
-   var x=hr('button',{type:'button',class:'add full',t:'حذف الصنف'});
-   x.onclick=two(x,function(){s.items.splice(ii,1);sel={};aS()});
-   var rm=hr('button',{type:'button',class:'add full',t:'إزالة الصورة'});rm.onclick=function(){it.i='';im.style.backgroundImage='none'};
-   var nm=inp(it.n,'اسم الخدمة',function(v){it.n=v});nm.className='full';
-   it.pt=it.pt||'fixed';var pt=hr('select');
-   [{v:'fixed',t:'سعر ثابت'},{v:'range',t:'سعر من مبلغ إلى مبلغ'},{v:'visit',t:'السعر بعد المعاينة'}].forEach(function(o){pt.appendChild(hr('option',{value:o.v,t:o.t}))});
-   pt.value=it.pt;pt.onchange=function(){it.pt=pt.value;aS()};
-   var fields=[im,nm,pt];
-   if(it.pt==='fixed')fields.push(inp(it.p,'السعر بالدينار',function(v){it.p=Number(v)||0},'number'));
-   if(it.pt==='range'){fields.push(inp(it.min,'أقل سعر بالدينار',function(v){it.min=Number(v)||0},'number'));fields.push(inp(it.max,'أعلى سعر بالدينار',function(v){it.max=Number(v)||0},'number'))}
-   if(it.pt==='visit')fields.push(hr('p',{class:'sub',t:'السعر النهائي يتحدد بعد المعاينة.'}));
-   fields.push(inp(it.d,'المدة',function(v){it.d=v}));
-   var f=hr('input',{type:'file',accept:'image/*',class:'full'});f.onchange=function(){if(f.files[0])up(f.files[0],function(u){it.i=u;im.style.backgroundImage='url('+u+')'})};
-   fields.push(f,rm,x);box.appendChild(hr('div',{class:'item'},fields));
-  });
-  var ad=hr('button',{type:'button',class:'btn alt',t:'+ إضافة صنف'});
-  ad.onclick=function(){s.items.push({n:'',d:'',p:0,i:'',pt:'fixed',min:0,max:0});aS()};
-  box.appendChild(ad);P.appendChild(box);
+
+function saveSettings(){
+ var next=Object.assign({},C,{
+  name:$("setName").value.trim(),
+  tag:$("setTag").value.trim(),
+  kick:$("setKick").value.trim(),
+  hero:$("setHero").value.trim(),
+  wa:$("setWa").value.trim(),
+  addr:$("setAddress").value.trim(),
+  hours:$("setHours").value.trim(),
+  open:Number($("setOpen").value),
+  close:Number($("setClose").value),
+  bgimg:$("setBg").value.trim(),
+  theme:$("setTheme").value
  });
- var as=hr('button',{type:'button',class:'btn',t:'+ إضافة قسم جديد'});
- as.onclick=function(){C.sections.push({t:'قسم جديد',items:[]});aS()};P.appendChild(as);
-}
-function aT(){
- var P=$('p1');P.innerHTML='';
- var sl=hr('select');Object.keys(TN).forEach(function(k){var o=hr('option',{value:k,t:TN[k]});if(k===C.theme)o.selected=true;sl.appendChild(o)});
- sl.onchange=function(){C.theme=sl.value;theme()};
- var f=hr('input',{type:'file',accept:'image/*'});f.onchange=function(){if(f.files[0])up(f.files[0],function(u){C.bgimg=u;theme()})};
- var rb=hr('button',{type:'button',class:'add',t:'إزالة صورة الخلفية'});rb.onclick=function(){C.bgimg='';theme()};
- var L=function(t){return hr('label',{t:t})};
- [[L('اسم الشعار (إنجليزي)'),inp(C.brand,'',function(v){C.brand=v})],[L('اسم المركز (عربي)'),inp(C.name,'',function(v){C.name=v})],[L('الشعار النصي'),inp(C.tag,'',function(v){C.tag=v})],
- [L('رقم واتساب بصيغة دولية بدون +'),inp(C.wa,'',function(v){C.wa=v.replace(/[^0-9]/g,'')},'tel')],
- [L('ألوان الموقع'),sl],[L('صورة الخلفية'),f,rb],
- [L('بداية الدوام (ساعة من 0 إلى 23)'),inp(C.open,'',function(v){C.open=Math.max(0,Math.min(23,Number(v)||10))},'number')],
- [L('نهاية الدوام (ساعة)'),inp(C.close,'',function(v){C.close=Math.max(1,Math.min(24,Number(v)||21))},'number')],
- [L('نص مواعيد العمل'),inp(C.hours,'',function(v){C.hours=v})],[L('العنوان'),inp(C.addr,'',function(v){C.addr=v})],
- [L('العبارة الصغيرة فوق العنوان'),inp(C.kick,'',function(v){C.kick=v})],[L('الجملة تحت العنوان'),inp(C.hero,'',function(v){C.hero=v})]
- ].forEach(function(r){r.forEach(function(e){P.appendChild(e)})});
- P.appendChild(hr('h3',{t:'عبارات وفقرات إضافية',style:'margin-top:24px'}));
- P.appendChild(hr('p',{class:'sub',t:'تظهر في الصفحة تحت الخدمات، مثل نبذة عن المركز أو عرض أو ملاحظات.'}));
- C.blocks=C.blocks||[];
- C.blocks.forEach(function(b,bi){
-  var dl=hr('button',{type:'button',class:'add',t:'حذف'});dl.onclick=two(dl,function(){C.blocks.splice(bi,1);aT()});
-  var ta=hr('textarea',{rows:'3',placeholder:'النص'});ta.value=b.x||'';ta.oninput=function(){b.x=ta.value};
-  P.appendChild(hr('div',{class:'card'},[inp(b.t,'العنوان (اختياري)',function(v){b.t=v}),ta,dl]));
- });
- var ab=hr('button',{type:'button',class:'btn alt',t:'+ إضافة عبارة'});
- ab.onclick=function(){C.blocks.push({t:'',x:''});aT()};P.appendChild(ab);
-}
- function aM(){
- var P=$('p2');P.innerHTML='';
- var d=hr('input',{type:'date'});d.value=iso(new Date());
- var g=hr('div',{class:'slots'});
- function gr(){
-  g.innerHTML='';
-  for(var h=Number(C.open);h<Number(C.close);h++){
-   var t=pad(h)+':00',on=(B[d.value]||[]).indexOf(t)>=0,b=hr('button',{type:'button',class:'slot',t:lbl(h)+(on?' ✕':'')});
-   b.setAttribute('aria-pressed',on);
-   b.onclick=(function(t,on){return function(){
-    var dv=d.value;post({a:on?'unblock':'block',pin:PIN,date:dv,time:t}).then(function(r){
-     if(!r.ok){toast('تعذر التنفيذ');return}
-     var a=B[dv]||[];if(on){var ix=a.indexOf(t);if(ix>=0)a.splice(ix,1)}else a.push(t);
-     B[dv]=a;if(on)ROWS=ROWS.filter(function(x){return!(x.d===dv&&x.t===t)});
-     gr();aM2();
-    }).catch(function(){toast('تعذر الاتصال')});
-   }})(t,on);
-   g.appendChild(b);
+
+ apiPost({a:"save",pin:PIN,cfg:next})
+ .then(function(r){
+  if(r&&r.ok){
+   C=next;
+   render();
+   toast("تم حفظ الإعدادات");
+  }else{
+   toast((r&&r.message)||"تعذر حفظ الإعدادات");
   }
- }
- d.onchange=gr;P.appendChild(hr('label',{t:'اليوم'}));P.appendChild(d);
- P.appendChild(hr('p',{class:'sub',t:'اضغطي على الوقت لقفله، واضغطي مرة ثانية لفتحه.'}));
- P.appendChild(g);gr();P.appendChild(hr('h3',{t:'الحجوزات',style:'margin-top:24px'}));
- var Lw=hr('div',{id:'bl'});P.appendChild(Lw);aM2();
+ })
+ .catch(function(){toast("حدث خطأ أثناء الحفظ")});
 }
-function aM2(){
- var Lw=$('bl');if(!Lw)return;Lw.innerHTML='';
- if(!ROWS.length)Lw.appendChild(hr('p',{class:'sub',t:'لا توجد حجوزات.'}));
- ROWS.slice().reverse().forEach(function(r){
-  var c=hr('button',{type:'button',class:'add',t:'إلغاء'});
-  c.onclick=two(c,function(){post({a:'unblock',pin:PIN,date:r.d,time:r.t}).then(function(x){
-   if(x.ok){var a=B[r.d]||[],ix=a.indexOf(r.t);if(ix>=0)a.splice(ix,1);ROWS=ROWS.filter(function(y){return y!==r});aM2()}
-  }).catch(function(){toast('تعذر الاتصال')})});
-  Lw.appendChild(hr('div',{class:'ar'},[
-   hr('span',{t:r.d+' · '+r.t+' · '+(r.n||'')+(r.totalText?' · '+r.totalText:(r.p?' · '+r.p+' د.ل':''))+(r.s?' · '+r.s:'')}),
-   c
-  ]));
+
+function saveServices(){
+ var arr;
+ try{
+  arr=JSON.parse($("servicesJson").value);
+  if(!Array.isArray(arr))throw new Error();
+  arr.forEach(function(s){
+   if(!s.t||!Array.isArray(s.items))throw new Error();
+  });
+ }catch(e){
+  toast("تأكدي من صيغة الخدمات");
+  return;
+ }
+
+ var next=Object.assign({},C,{sections:arr});
+
+ apiPost({a:"save",pin:PIN,cfg:next})
+ .then(function(r){
+  if(r&&r.ok){
+   C=next;
+   render();
+   toast("تم حفظ الخدمات والأسعار");
+  }else{
+   toast((r&&r.message)||"تعذر حفظ الخدمات");
+  }
+ })
+ .catch(function(){toast("حدث خطأ أثناء الحفظ")});
+}
+
+function loadAppointments(){
+ $("appointmentList").innerHTML='<p class="empty">جاري تحميل الحجوزات...</p>';
+
+ apiPost({a:"list",pin:PIN})
+ .then(function(r){
+  if(r&&r.ok===false){
+   $("appointmentList").textContent=r.message||"تعذر تحميل الحجوزات";
+   return;
+  }
+
+  ROWS=Array.isArray(r)?r:(r.rows||r.bookings||[]);
+  renderAppointments();
+ })
+ .catch(function(){
+  $("appointmentList").innerHTML='<p class="empty">تعذر تحميل الحجوزات</p>';
  });
 }
-render();
-if(API){
- fetch(API+'?a=data').then(function(r){return r.json()}).then(function(d){
-  if(d.cfg&&d.cfg.sections){C=Object.assign({},DEF,d.cfg);if(!C.sections)C.sections=DEF.sections}
-  B=d.booked||d.B||{};render();
- }).catch(function(){});
+
+function renderAppointments(){
+ var L=$("appointmentList");
+ L.innerHTML="";
+
+ if(!ROWS.length){
+  L.innerHTML='<p class="empty">لا توجد حجوزات حاليًا</p>';
+  return;
+ }
+
+ ROWS.slice().reverse().forEach(function(r){
+  var div=document.createElement("div");
+  div.className="admin-row";
+
+  var name=r.n||r.name||"";
+  var phone=r.p||r.phone||"";
+  var date=r.d||r.date||"";
+  var time=r.t||r.time||"";
+  var services=r.svc||r.s||r.services||"";
+  var total=r.totalText||r.total||"";
+
+  div.innerHTML=
+   "<strong style='color:var(--gold)'>"+escapeHtml(name)+"</strong><br>"+
+   "الهاتف: "+escapeHtml(phone)+"<br>"+
+   "التاريخ: "+escapeHtml(date)+" — "+escapeHtml(time)+"<br>"+
+   "الخدمات: "+escapeHtml(services)+"<br>"+
+   "الإجمالي: "+escapeHtml(total);
+
+  L.appendChild(div);
+ });
 }
-if(location.hash==='#admin')openPin();
+
+function changeBlock(action){
+ var d=$("blockDate").value;
+ var t=$("blockTime").value;
+
+ if(!d||!t){
+  toast("اختاري التاريخ والوقت");
+  return;
+ }
+
+ apiPost({a:action,pin:PIN,date:d,time:t})
+ .then(function(r){
+  if(r&&r.ok){
+   toast(action==="block"?"تم حظر الموعد":"تم إلغاء الحظر");
+   loadData();
+  }else{
+   toast((r&&r.message)||"تعذر تنفيذ العملية");
+  }
+ })
+ .catch(function(){toast("حدث خطأ في الاتصال")});
+}
+
+/* تشغيل الموقع */
+render();
+loadData();
 </script>
+
 </body>
 </html>
